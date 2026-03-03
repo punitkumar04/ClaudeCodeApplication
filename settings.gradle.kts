@@ -6,6 +6,5 @@ pluginManagement {
     }
 }
 
-
 rootProject.name = "ConstructionKhata"
 include(":app")
