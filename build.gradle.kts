@@ -6,3 +6,10 @@ plugins {
     alias(libs.plugins.hilt) apply false
     alias(libs.plugins.google.services) apply false
 }
+
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
