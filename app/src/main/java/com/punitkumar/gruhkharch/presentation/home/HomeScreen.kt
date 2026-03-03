@@ -41,7 +41,7 @@ fun HomeScreen(
         // Header
         item {
             Text(
-                text = state.projectName.ifEmpty { "GruhKharch" },
+                text = state.projectName.ifEmpty { "Construction Khata" },
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold
             )

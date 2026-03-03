@@ -259,7 +259,7 @@ private fun ReportRow(label: String, amount: Double, total: Double, color: Color
 
 private fun exportCsv(context: Context, csvContent: String) {
     try {
-        val file = File(context.cacheDir, "gruhkharch_expenses.csv")
+        val file = File(context.cacheDir, "construction_khata_expenses.csv")
         file.writeText(csvContent)
         val uri = FileProvider.getUriForFile(context, "${context.packageName}.provider", file)
         val intent = Intent(Intent.ACTION_SEND).apply {
@@ -277,7 +277,7 @@ private fun shareCsv(context: Context, csvContent: String) {
     try {
         val intent = Intent(Intent.ACTION_SEND).apply {
             type = "text/plain"
-            putExtra(Intent.EXTRA_SUBJECT, "House Construction Expenses Report")
+            putExtra(Intent.EXTRA_SUBJECT, "Construction Khata - Expenses Report")
             putExtra(Intent.EXTRA_TEXT, csvContent)
         }
         context.startActivity(Intent.createChooser(intent, "Share Report"))
