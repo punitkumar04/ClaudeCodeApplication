@@ -104,10 +104,12 @@ class AddExpenseViewModel @Inject constructor(
     fun updateDate(date: Long) { _state.update { it.copy(date = date) } }
     fun updatePaidBy(member: Member) { _state.update { it.copy(paidByMember = member) } }
     fun updatePaymentMode(mode: PaymentMode) { _state.update { it.copy(paymentMode = mode) } }
-    fun updateTransactionRef(ref: String) { _state.update { it.copy(transactionRef = ref) } }
     fun updateVendor(vendor: String) { _state.update { it.copy(vendor = vendor) } }
-    fun updateNotes(notes: String) { _state.update { it.copy(notes = notes) } }
-    fun updateTagInput(input: String) { _state.update { it.copy(tagInput = input) } }
+    fun updateNotes(notes: String) {
+        if (notes.length <= 200) {
+            _state.update { it.copy(notes = notes) }
+        }
+    }
 
     fun updateCategory(category: String) {
         val cat = DefaultCategories.all.find { it.name == category }

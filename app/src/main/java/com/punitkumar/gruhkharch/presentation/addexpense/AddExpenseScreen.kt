@@ -19,7 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.punitkumar.gruhkharch.domain.model.*
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddExpenseScreen(
     expenseId: String? = null,
@@ -187,17 +187,6 @@ fun AddExpenseScreen(
                 }
             }
 
-            // Transaction Ref
-            OutlinedTextField(
-                value = state.transactionRef,
-                onValueChange = viewModel::updateTransactionRef,
-                label = { Text("Transaction Ref (Optional)") },
-                placeholder = { Text("UPI ID, Cheque No., etc.") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                leadingIcon = { Icon(Icons.Filled.Tag, contentDescription = null) }
-            )
-
             // Category
             ExposedDropdownMenuBox(
                 expanded = showCategoryMenu,
@@ -309,46 +298,11 @@ fun AddExpenseScreen(
                 modifier = Modifier.fillMaxWidth(),
                 minLines = 2,
                 maxLines = 4,
-                leadingIcon = { Icon(Icons.Filled.Notes, contentDescription = null) }
+                leadingIcon = { Icon(Icons.Filled.Notes, contentDescription = null) },
+                supportingText = {
+                    Text("${state.notes.length}/200")
+                }
             )
-
-            // Tags
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                OutlinedTextField(
-                    value = state.tagInput,
-                    onValueChange = viewModel::updateTagInput,
-                    label = { Text("Tags") },
-                    placeholder = { Text("Add tag") },
-                    modifier = Modifier.weight(1f),
-                    singleLine = true
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                FilledIconButton(onClick = { viewModel.addTag() }) {
-                    Icon(Icons.Filled.Add, contentDescription = "Add tag")
-                }
-            }
-
-            if (state.tags.isNotEmpty()) {
-                FlowRow(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    state.tags.forEach { tag ->
-                        InputChip(
-                            selected = true,
-                            onClick = { viewModel.removeTag(tag) },
-                            label = { Text(tag) },
-                            trailingIcon = {
-                                Icon(Icons.Filled.Close, contentDescription = "Remove", modifier = Modifier.size(16.dp))
-                            }
-                        )
-                    }
-                }
-            }
 
             // Error message
             state.error?.let { error ->
