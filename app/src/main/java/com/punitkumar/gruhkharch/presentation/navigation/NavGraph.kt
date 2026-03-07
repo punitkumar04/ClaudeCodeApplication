@@ -33,7 +33,6 @@ data class BottomNavItem(
 
 val bottomNavItems = listOf(
     BottomNavItem("Home", Routes.Home.route, Icons.Filled.Home, Icons.Outlined.Home),
-    BottomNavItem("Add", Routes.AddExpense.createRoute(), Icons.Filled.AddCircle, Icons.Outlined.AddCircle),
     BottomNavItem("Expenses", Routes.Expenses.route, Icons.Filled.Receipt, Icons.Outlined.Receipt),
     BottomNavItem("Reports", Routes.Reports.route, Icons.Filled.BarChart, Icons.Outlined.BarChart),
     BottomNavItem("Settings", Routes.Settings.route, Icons.Filled.Settings, Icons.Outlined.Settings)
