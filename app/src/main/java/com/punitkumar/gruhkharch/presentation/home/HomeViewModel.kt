@@ -25,7 +25,8 @@ data class HomeState(
     val stageBreakdown: Map<String, Double> = emptyMap(),
     val memberBreakdown: Map<String, Double> = emptyMap(),
     val isLoading: Boolean = true,
-    val error: String? = null
+    val error: String? = null,
+    val hasProject: Boolean = true
 )
 
 @HiltViewModel
@@ -45,8 +46,16 @@ class HomeViewModel @Inject constructor(
 
     private fun loadDashboard() {
         viewModelScope.launch {
-            val projectId = currentProjectHolder.projectId.value ?: return@launch
-            val project = projectRepository.getProject(projectId) ?: return@launch
+            val projectId = currentProjectHolder.projectId.value
+            if (projectId == null) {
+                _state.update { it.copy(hasProject = false, isLoading = false) }
+                return@launch
+            }
+            val project = projectRepository.getProject(projectId)
+            if (project == null) {
+                _state.update { it.copy(hasProject = false, isLoading = false) }
+                return@launch
+            }
 
             _state.update {
                 it.copy(

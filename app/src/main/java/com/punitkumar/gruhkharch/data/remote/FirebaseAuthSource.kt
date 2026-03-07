@@ -1,15 +1,20 @@
 package com.punitkumar.gruhkharch.data.remote
 
+import android.content.Context
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 import com.punitkumar.gruhkharch.domain.model.User
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class FirebaseAuthSource @Inject constructor(
-    private val auth: FirebaseAuth
+    private val auth: FirebaseAuth,
+    @ApplicationContext private val context: Context
 ) {
     val currentUser: User?
         get() = auth.currentUser?.let {
@@ -40,5 +45,10 @@ class FirebaseAuthSource @Inject constructor(
 
     fun signOut() {
         auth.signOut()
+        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestIdToken("YOUR_WEB_CLIENT_ID")
+            .requestEmail()
+            .build()
+        GoogleSignIn.getClient(context, gso).signOut()
     }
 }

@@ -16,6 +16,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.punitkumar.gruhkharch.domain.CurrentProjectHolder
 import com.punitkumar.gruhkharch.presentation.addexpense.AddExpenseScreen
 import com.punitkumar.gruhkharch.presentation.auth.AuthScreen
 import com.punitkumar.gruhkharch.presentation.expenses.ExpensesScreen
@@ -39,15 +40,27 @@ val bottomNavItems = listOf(
     BottomNavItem("Settings", Routes.Settings.route, Icons.Filled.Settings, Icons.Outlined.Settings)
 )
 
+private val fabExcludedRoutes = setOf(
+    Routes.ProjectsList.route,
+    Routes.Settings.route,
+    Routes.AddExpense.route,
+    Routes.AddExpense.createRoute()
+)
+
 @Composable
-fun AppNavGraph(isSignedIn: Boolean) {
+fun AppNavGraph(isSignedIn: Boolean, currentProjectHolder: CurrentProjectHolder) {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
+    val currentProjectId by currentProjectHolder.projectId.collectAsState()
 
     val showBottomBar = currentDestination?.hierarchy?.any { dest ->
         bottomNavItems.any { it.route == dest.route }
     } == true
+
+    val showFab = showBottomBar
+        && currentProjectId != null
+        && currentDestination?.route !in fabExcludedRoutes
 
     val startDestination = if (!isSignedIn) Routes.Auth.route else Routes.ProjectsList.route
 
@@ -72,7 +85,7 @@ fun AppNavGraph(isSignedIn: Boolean) {
                                         saveState = true
                                     }
                                     launchSingleTop = true
-                                    restoreState = true
+                                    restoreState = item.route != Routes.ProjectsList.route
                                 }
                             }
                         )
@@ -81,7 +94,7 @@ fun AppNavGraph(isSignedIn: Boolean) {
             }
         },
         floatingActionButton = {
-            if (showBottomBar && currentDestination?.route != Routes.AddExpense.createRoute()) {
+            if (showFab) {
                 FloatingActionButton(
                     onClick = {
                         navController.navigate(Routes.AddExpense.createRoute()) {

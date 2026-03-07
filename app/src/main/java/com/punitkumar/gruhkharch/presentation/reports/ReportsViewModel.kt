@@ -24,7 +24,8 @@ data class ReportsState(
     val monthlyTrend: Map<String, Double> = emptyMap(),
     val topVendors: Map<String, Double> = emptyMap(),
     val isLoading: Boolean = true,
-    val allExpenses: List<Expense> = emptyList()
+    val allExpenses: List<Expense> = emptyList(),
+    val hasProject: Boolean = true
 )
 
 @HiltViewModel
@@ -44,8 +45,16 @@ class ReportsViewModel @Inject constructor(
 
     private fun loadReports() {
         viewModelScope.launch {
-            val projectId = currentProjectHolder.projectId.value ?: return@launch
-            val project = projectRepository.getProject(projectId) ?: return@launch
+            val projectId = currentProjectHolder.projectId.value
+            if (projectId == null) {
+                _state.update { it.copy(hasProject = false, isLoading = false) }
+                return@launch
+            }
+            val project = projectRepository.getProject(projectId)
+            if (project == null) {
+                _state.update { it.copy(hasProject = false, isLoading = false) }
+                return@launch
+            }
 
             _state.update { it.copy(budget = project.budget) }
 
