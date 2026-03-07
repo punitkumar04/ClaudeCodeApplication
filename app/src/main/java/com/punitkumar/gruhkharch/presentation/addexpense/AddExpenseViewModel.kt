@@ -19,14 +19,11 @@ data class AddExpenseState(
     val date: Long = System.currentTimeMillis(),
     val paidByMember: Member? = null,
     val paymentMode: PaymentMode = PaymentMode.CASH,
-    val transactionRef: String = "",
     val category: String = "",
     val subCategory: String = "",
     val stage: String = "",
     val vendor: String = "",
     val notes: String = "",
-    val tags: List<String> = emptyList(),
-    val tagInput: String = "",
     val members: List<Member> = emptyList(),
     val categories: List<Category> = DefaultCategories.all,
     val stages: List<ConstructionStage> = DefaultStages.all,
@@ -34,7 +31,8 @@ data class AddExpenseState(
     val isLoading: Boolean = false,
     val isSaved: Boolean = false,
     val error: String? = null,
-    val isEditing: Boolean = false
+    val isEditing: Boolean = false,
+    val canEdit: Boolean = true
 )
 
 @HiltViewModel
@@ -50,6 +48,9 @@ class AddExpenseViewModel @Inject constructor(
     val state: StateFlow<AddExpenseState> = _state.asStateFlow()
 
     private var projectId: String = ""
+    private var editingExpenseId: String? = null
+    private var editingCreatedAt: Long = System.currentTimeMillis()
+    private var editingCreatedBy: String = ""
 
     init {
         loadProjectData()
@@ -76,6 +77,24 @@ class AddExpenseViewModel @Inject constructor(
     fun loadExpense(expenseId: String) {
         viewModelScope.launch {
             val expense = expenseRepository.getExpenseById(expenseId) ?: return@launch
+            val currentUserId = authRepository.currentUserId ?: ""
+
+            // Only the creator can edit
+            if (expense.createdBy != currentUserId) {
+                _state.update {
+                    it.copy(
+                        isEditing = true,
+                        canEdit = false,
+                        error = "You can only edit expenses you created"
+                    )
+                }
+                return@launch
+            }
+
+            editingExpenseId = expense.id
+            editingCreatedAt = expense.createdAt
+            editingCreatedBy = expense.createdBy
+
             val category = DefaultCategories.all.find { it.name == expense.category }
             _state.update {
                 it.copy(
@@ -84,15 +103,14 @@ class AddExpenseViewModel @Inject constructor(
                     date = expense.date,
                     paidByMember = expense.paidBy,
                     paymentMode = expense.paymentMode,
-                    transactionRef = expense.transactionRef ?: "",
                     category = expense.category,
                     subCategory = expense.subCategory ?: "",
                     stage = expense.stage,
                     vendor = expense.vendor ?: "",
                     notes = expense.notes ?: "",
-                    tags = expense.tags,
                     subCategories = category?.subCategories ?: emptyList(),
-                    isEditing = true
+                    isEditing = true,
+                    canEdit = true
                 )
             }
             projectId = expense.projectId
@@ -128,19 +146,9 @@ class AddExpenseViewModel @Inject constructor(
 
     fun updateStage(stage: String) { _state.update { it.copy(stage = stage) } }
 
-    fun addTag() {
-        val tag = _state.value.tagInput.trim()
-        if (tag.isNotBlank() && tag !in _state.value.tags) {
-            _state.update { it.copy(tags = it.tags + tag, tagInput = "") }
-        }
-    }
-
-    fun removeTag(tag: String) {
-        _state.update { it.copy(tags = it.tags - tag) }
-    }
-
     fun saveExpense() {
         val s = _state.value
+        if (!s.canEdit) return
         if (s.title.isBlank()) { _state.update { it.copy(error = "Title is required") }; return }
         if (s.amount.toDoubleOrNull() == null || s.amount.toDouble() <= 0) {
             _state.update { it.copy(error = "Enter a valid amount") }; return
@@ -152,23 +160,32 @@ class AddExpenseViewModel @Inject constructor(
             _state.update { it.copy(isLoading = true, error = null) }
 
             val expense = Expense(
+                id = editingExpenseId ?: "",
                 title = s.title.trim(),
                 amount = s.amount.toDouble(),
                 date = s.date,
                 paidBy = s.paidByMember ?: Member(),
                 paymentMode = s.paymentMode,
-                transactionRef = s.transactionRef.ifBlank { null },
                 category = s.category,
                 subCategory = s.subCategory.ifBlank { null },
                 stage = s.stage,
                 vendor = s.vendor.ifBlank { null },
                 notes = s.notes.ifBlank { null },
-                tags = s.tags,
-                createdBy = authRepository.currentUserId ?: "",
+                tags = emptyList(),
+                createdBy = if (s.isEditing) editingCreatedBy else (authRepository.currentUserId ?: ""),
+                createdAt = if (s.isEditing) editingCreatedAt else System.currentTimeMillis(),
+                updatedAt = System.currentTimeMillis(),
                 projectId = projectId
             )
 
-            addExpenseUseCase(expense)
+            val result = if (s.isEditing) {
+                expenseRepository.updateExpense(expense)
+                    .map { expense.id }
+            } else {
+                addExpenseUseCase(expense)
+            }
+
+            result
                 .onSuccess {
                     _state.update { it.copy(isLoading = false, isSaved = true) }
                 }
