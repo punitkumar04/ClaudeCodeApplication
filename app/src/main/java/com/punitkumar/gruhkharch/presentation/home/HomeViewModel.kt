@@ -9,6 +9,7 @@ import com.punitkumar.gruhkharch.domain.repository.ExpenseRepository
 import com.punitkumar.gruhkharch.domain.repository.ProjectRepository
 import com.punitkumar.gruhkharch.util.DateUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -40,99 +41,110 @@ class HomeViewModel @Inject constructor(
     private val _state = MutableStateFlow(HomeState())
     val state: StateFlow<HomeState> = _state.asStateFlow()
 
+    private var dashboardJob: Job? = null
+
     init {
-        loadDashboard()
+        observeProjectChanges()
     }
 
-    private fun loadDashboard() {
+    private fun observeProjectChanges() {
         viewModelScope.launch {
-            val projectId = currentProjectHolder.projectId.value
-            if (projectId == null) {
-                _state.update { it.copy(hasProject = false, isLoading = false) }
-                return@launch
-            }
-            val project = projectRepository.getProject(projectId)
-            if (project == null) {
-                _state.update { it.copy(hasProject = false, isLoading = false) }
-                return@launch
-            }
-
-            _state.update {
-                it.copy(
-                    projectName = project.name,
-                    budget = project.budget,
-                    currentStage = project.currentStage
-                )
-            }
-
-            // Observe total spent
-            launch {
-                expenseRepository.getTotalSpent(project.id).collect { total ->
-                    _state.update { it.copy(totalSpent = total) }
+            currentProjectHolder.projectId.collect { projectId ->
+                dashboardJob?.cancel()
+                if (projectId == null) {
+                    _state.value = HomeState(hasProject = false, isLoading = false)
+                } else {
+                    _state.value = HomeState()
+                    dashboardJob = launch { loadDashboard(projectId) }
                 }
             }
+        }
+    }
 
-            // Observe this month spending
-            val now = System.currentTimeMillis()
-            val monthStart = DateUtils.getStartOfMonth(now)
-            val monthEnd = DateUtils.getEndOfMonth(now)
-            launch {
-                expenseRepository.getTotalInDateRange(project.id, monthStart, monthEnd).collect { total ->
-                    _state.update { it.copy(thisMonthSpent = total) }
-                }
+    private suspend fun loadDashboard(projectId: String) {
+        val project = projectRepository.getProject(projectId)
+        if (project == null) {
+            _state.update { it.copy(hasProject = false, isLoading = false) }
+            return
+        }
+
+        _state.update {
+            it.copy(
+                projectName = project.name,
+                budget = project.budget,
+                currentStage = project.currentStage
+            )
+        }
+
+        // Observe total spent
+        viewModelScope.launch {
+            expenseRepository.getTotalSpent(project.id).collect { total ->
+                _state.update { it.copy(totalSpent = total) }
             }
+        }
 
-            // Last month
-            val lastMonthEnd = monthStart - 1
-            val lastMonthStart = DateUtils.getStartOfMonth(lastMonthEnd)
-            launch {
-                expenseRepository.getTotalInDateRange(project.id, lastMonthStart, lastMonthEnd).collect { total ->
-                    _state.update { it.copy(lastMonthSpent = total) }
-                }
+        // Observe this month spending
+        val now = System.currentTimeMillis()
+        val monthStart = DateUtils.getStartOfMonth(now)
+        val monthEnd = DateUtils.getEndOfMonth(now)
+        viewModelScope.launch {
+            expenseRepository.getTotalInDateRange(project.id, monthStart, monthEnd).collect { total ->
+                _state.update { it.copy(thisMonthSpent = total) }
             }
+        }
 
-            // Recent expenses
-            launch {
-                expenseRepository.getRecentExpenses(project.id, 10).collect { expenses ->
-                    _state.update { it.copy(recentExpenses = expenses, isLoading = false) }
-                }
+        // Last month
+        val lastMonthEnd = monthStart - 1
+        val lastMonthStart = DateUtils.getStartOfMonth(lastMonthEnd)
+        viewModelScope.launch {
+            expenseRepository.getTotalInDateRange(project.id, lastMonthStart, lastMonthEnd).collect { total ->
+                _state.update { it.copy(lastMonthSpent = total) }
             }
+        }
 
-            // Category breakdown
-            launch {
-                expenseRepository.getExpenses(project.id).collect { expenses ->
-                    val categoryMap = expenses.groupBy { it.category }
-                        .mapValues { (_, exps) -> exps.sumOf { it.amount } }
-                        .toList()
-                        .sortedByDescending { it.second }
-                        .toMap()
+        // Recent expenses
+        viewModelScope.launch {
+            expenseRepository.getRecentExpenses(project.id, 10).collect { expenses ->
+                _state.update { it.copy(recentExpenses = expenses, isLoading = false) }
+            }
+        }
 
-                    val stageMap = expenses.groupBy { it.stage }
-                        .mapValues { (_, exps) -> exps.sumOf { it.amount } }
-                        .toList()
-                        .sortedByDescending { it.second }
-                        .toMap()
+        // Category breakdown
+        viewModelScope.launch {
+            expenseRepository.getExpenses(project.id).collect { expenses ->
+                val categoryMap = expenses.groupBy { it.category }
+                    .mapValues { (_, exps) -> exps.sumOf { it.amount } }
+                    .toList()
+                    .sortedByDescending { it.second }
+                    .toMap()
 
-                    val memberMap = expenses.groupBy { it.paidBy.name }
-                        .mapValues { (_, exps) -> exps.sumOf { it.amount } }
-                        .toList()
-                        .sortedByDescending { it.second }
-                        .toMap()
+                val stageMap = expenses.groupBy { it.stage }
+                    .mapValues { (_, exps) -> exps.sumOf { it.amount } }
+                    .toList()
+                    .sortedByDescending { it.second }
+                    .toMap()
 
-                    _state.update {
-                        it.copy(
-                            categoryBreakdown = categoryMap,
-                            stageBreakdown = stageMap,
-                            memberBreakdown = memberMap
-                        )
-                    }
+                val memberMap = expenses.groupBy { it.paidBy.name }
+                    .mapValues { (_, exps) -> exps.sumOf { it.amount } }
+                    .toList()
+                    .sortedByDescending { it.second }
+                    .toMap()
+
+                _state.update {
+                    it.copy(
+                        categoryBreakdown = categoryMap,
+                        stageBreakdown = stageMap,
+                        memberBreakdown = memberMap
+                    )
                 }
             }
         }
     }
 
     fun refresh() {
+        val projectId = currentProjectHolder.projectId.value ?: return
+        dashboardJob?.cancel()
         _state.update { it.copy(isLoading = true) }
-        loadDashboard()
+        dashboardJob = viewModelScope.launch { loadDashboard(projectId) }
     }
 }

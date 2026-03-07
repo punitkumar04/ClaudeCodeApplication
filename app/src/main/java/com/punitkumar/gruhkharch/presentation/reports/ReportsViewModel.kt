@@ -9,9 +9,9 @@ import com.punitkumar.gruhkharch.domain.repository.ExpenseRepository
 import com.punitkumar.gruhkharch.domain.repository.ProjectRepository
 import com.punitkumar.gruhkharch.util.DateUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import java.util.Calendar
 import javax.inject.Inject
 
 data class ReportsState(
@@ -39,65 +39,74 @@ class ReportsViewModel @Inject constructor(
     private val _state = MutableStateFlow(ReportsState())
     val state: StateFlow<ReportsState> = _state.asStateFlow()
 
+    private var reportsJob: Job? = null
+
     init {
-        loadReports()
+        observeProjectChanges()
     }
 
-    private fun loadReports() {
+    private fun observeProjectChanges() {
         viewModelScope.launch {
-            val projectId = currentProjectHolder.projectId.value
-            if (projectId == null) {
-                _state.update { it.copy(hasProject = false, isLoading = false) }
-                return@launch
-            }
-            val project = projectRepository.getProject(projectId)
-            if (project == null) {
-                _state.update { it.copy(hasProject = false, isLoading = false) }
-                return@launch
-            }
-
-            _state.update { it.copy(budget = project.budget) }
-
-            expenseRepository.getExpenses(project.id).collect { expenses ->
-                val total = expenses.sumOf { it.amount }
-
-                val categoryMap = expenses.groupBy { it.category }
-                    .mapValues { (_, exps) -> exps.sumOf { it.amount } }
-                    .toList().sortedByDescending { it.second }.toMap()
-
-                val stageMap = expenses.groupBy { it.stage }
-                    .mapValues { (_, exps) -> exps.sumOf { it.amount } }
-                    .toList().sortedByDescending { it.second }.toMap()
-
-                val memberMap = expenses.groupBy { it.paidBy.name }
-                    .mapValues { (_, exps) -> exps.sumOf { it.amount } }
-                    .toList().sortedByDescending { it.second }.toMap()
-
-                val paymentMap = expenses.groupBy { it.paymentMode.displayName }
-                    .mapValues { (_, exps) -> exps.sumOf { it.amount } }
-                    .toList().sortedByDescending { it.second }.toMap()
-
-                val monthlyMap = expenses.groupBy { DateUtils.formatMonthYear(it.date) }
-                    .mapValues { (_, exps) -> exps.sumOf { it.amount } }
-
-                val vendorMap = expenses.filter { !it.vendor.isNullOrBlank() }
-                    .groupBy { it.vendor!! }
-                    .mapValues { (_, exps) -> exps.sumOf { it.amount } }
-                    .toList().sortedByDescending { it.second }.take(10).toMap()
-
-                _state.update {
-                    it.copy(
-                        totalSpent = total,
-                        categoryBreakdown = categoryMap,
-                        stageBreakdown = stageMap,
-                        memberBreakdown = memberMap,
-                        paymentModeBreakdown = paymentMap,
-                        monthlyTrend = monthlyMap,
-                        topVendors = vendorMap,
-                        isLoading = false,
-                        allExpenses = expenses
-                    )
+            currentProjectHolder.projectId.collect { projectId ->
+                reportsJob?.cancel()
+                if (projectId == null) {
+                    _state.value = ReportsState(hasProject = false, isLoading = false)
+                } else {
+                    _state.value = ReportsState()
+                    reportsJob = launch { loadReports(projectId) }
                 }
+            }
+        }
+    }
+
+    private suspend fun loadReports(projectId: String) {
+        val project = projectRepository.getProject(projectId)
+        if (project == null) {
+            _state.update { it.copy(hasProject = false, isLoading = false) }
+            return
+        }
+
+        _state.update { it.copy(budget = project.budget) }
+
+        expenseRepository.getExpenses(project.id).collect { expenses ->
+            val total = expenses.sumOf { it.amount }
+
+            val categoryMap = expenses.groupBy { it.category }
+                .mapValues { (_, exps) -> exps.sumOf { it.amount } }
+                .toList().sortedByDescending { it.second }.toMap()
+
+            val stageMap = expenses.groupBy { it.stage }
+                .mapValues { (_, exps) -> exps.sumOf { it.amount } }
+                .toList().sortedByDescending { it.second }.toMap()
+
+            val memberMap = expenses.groupBy { it.paidBy.name }
+                .mapValues { (_, exps) -> exps.sumOf { it.amount } }
+                .toList().sortedByDescending { it.second }.toMap()
+
+            val paymentMap = expenses.groupBy { it.paymentMode.displayName }
+                .mapValues { (_, exps) -> exps.sumOf { it.amount } }
+                .toList().sortedByDescending { it.second }.toMap()
+
+            val monthlyMap = expenses.groupBy { DateUtils.formatMonthYear(it.date) }
+                .mapValues { (_, exps) -> exps.sumOf { it.amount } }
+
+            val vendorMap = expenses.filter { !it.vendor.isNullOrBlank() }
+                .groupBy { it.vendor!! }
+                .mapValues { (_, exps) -> exps.sumOf { it.amount } }
+                .toList().sortedByDescending { it.second }.take(10).toMap()
+
+            _state.update {
+                it.copy(
+                    totalSpent = total,
+                    categoryBreakdown = categoryMap,
+                    stageBreakdown = stageMap,
+                    memberBreakdown = memberMap,
+                    paymentModeBreakdown = paymentMap,
+                    monthlyTrend = monthlyMap,
+                    topVendors = vendorMap,
+                    isLoading = false,
+                    allExpenses = expenses
+                )
             }
         }
     }
