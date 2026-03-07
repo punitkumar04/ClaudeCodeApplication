@@ -21,10 +21,12 @@ import com.punitkumar.gruhkharch.domain.model.DefaultStages
 @Composable
 fun SettingsScreen(
     onSignOut: () -> Unit,
+    onProjectDeleted: () -> Unit,
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
     var showStageMenu by remember { mutableStateOf(false) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(state.message) {
@@ -32,6 +34,41 @@ fun SettingsScreen(
             snackbarHostState.showSnackbar(it)
             viewModel.clearMessage()
         }
+    }
+
+    LaunchedEffect(state.isProjectDeleted) {
+        if (state.isProjectDeleted) {
+            onProjectDeleted()
+        }
+    }
+
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            icon = { Icon(Icons.Filled.Warning, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
+            title = { Text("Delete Project") },
+            text = {
+                Text(
+                    "This will permanently delete the project \"${state.project?.name}\" and all its data including expenses, members, and settings. This action cannot be undone."
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showDeleteDialog = false
+                        viewModel.deleteProject()
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                ) {
+                    Text("Delete")
+                }
+            },
+            dismissButton = {
+                OutlinedButton(onClick = { showDeleteDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 
     Scaffold(
@@ -45,12 +82,12 @@ fun SettingsScreen(
                 .fillMaxSize()
                 .padding(padding),
             contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // Profile Section
+            // ─── PROFILE SETTINGS ───
             item {
                 Text(
-                    text = "Profile",
+                    text = "Profile Settings",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.primary
@@ -58,7 +95,10 @@ fun SettingsScreen(
             }
             item {
                 Card(shape = RoundedCornerShape(12.dp)) {
-                    Column(modifier = Modifier.padding(16.dp)) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(Icons.Filled.Person, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                             Spacer(modifier = Modifier.width(12.dp))
@@ -77,26 +117,53 @@ fun SettingsScreen(
                                 }
                             }
                         }
+
+                        HorizontalDivider()
+
+                        // Sign Out
+                        OutlinedButton(
+                            onClick = {
+                                viewModel.signOut()
+                                onSignOut()
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                contentColor = MaterialTheme.colorScheme.error
+                            )
+                        ) {
+                            Icon(Icons.Filled.Logout, contentDescription = null)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Sign Out")
+                        }
                     }
                 }
             }
 
-            // Project Section
+            // ─── PROJECT SETTINGS ───
             item {
+                Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "Project",
+                    text = "Project Settings",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.primary
                 )
+                if (!state.isProjectOwner) {
+                    Text(
+                        text = "Only the project creator can modify these settings",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
+
+            // Project Name
             item {
                 Card(shape = RoundedCornerShape(12.dp)) {
                     Column(
                         modifier = Modifier.padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        // Project name
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(Icons.Filled.Home, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                             Spacer(modifier = Modifier.width(12.dp))
@@ -106,9 +173,14 @@ fun SettingsScreen(
                                 fontWeight = FontWeight.Medium
                             )
                         }
+                    }
+                }
+            }
 
-                        // Invite Code
-                        HorizontalDivider()
+            // Invite Code
+            item {
+                Card(shape = RoundedCornerShape(12.dp)) {
+                    Column(modifier = Modifier.padding(16.dp)) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             verticalAlignment = Alignment.CenterVertically,
@@ -127,8 +199,10 @@ fun SettingsScreen(
                                     letterSpacing = MaterialTheme.typography.headlineSmall.letterSpacing
                                 )
                             }
-                            IconButton(onClick = { viewModel.regenerateInviteCode() }) {
-                                Icon(Icons.Filled.Refresh, contentDescription = "Regenerate")
+                            if (state.isProjectOwner) {
+                                IconButton(onClick = { viewModel.regenerateInviteCode() }) {
+                                    Icon(Icons.Filled.Refresh, contentDescription = "Regenerate")
+                                }
                             }
                         }
                     }
@@ -139,9 +213,9 @@ fun SettingsScreen(
             item {
                 Text(
                     text = "Members (${state.members.size})",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.primary
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
             items(state.members) { member ->
@@ -178,9 +252,9 @@ fun SettingsScreen(
             item {
                 Text(
                     text = "Budget",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.primary
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
             item {
@@ -193,32 +267,35 @@ fun SettingsScreen(
                             modifier = Modifier.fillMaxWidth(),
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                             singleLine = true,
+                            enabled = state.isProjectOwner,
                             leadingIcon = { Icon(Icons.Filled.CurrencyRupee, contentDescription = null) }
                         )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Button(
-                            onClick = { viewModel.saveBudget() },
-                            modifier = Modifier.align(Alignment.End)
-                        ) {
-                            Text("Save Budget")
+                        if (state.isProjectOwner) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Button(
+                                onClick = { viewModel.saveBudget() },
+                                modifier = Modifier.align(Alignment.End)
+                            ) {
+                                Text("Save Budget")
+                            }
                         }
                     }
                 }
             }
 
-            // Current Stage
+            // Current Construction Stage
             item {
                 Text(
                     text = "Current Construction Stage",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.primary
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
             item {
                 ExposedDropdownMenuBox(
                     expanded = showStageMenu,
-                    onExpandedChange = { showStageMenu = it }
+                    onExpandedChange = { if (state.isProjectOwner) showStageMenu = it }
                 ) {
                     OutlinedTextField(
                         value = state.currentStage,
@@ -227,42 +304,83 @@ fun SettingsScreen(
                             .fillMaxWidth()
                             .menuAnchor(),
                         readOnly = true,
-                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = showStageMenu) },
+                        enabled = state.isProjectOwner,
+                        trailingIcon = {
+                            if (state.isProjectOwner) {
+                                ExposedDropdownMenuDefaults.TrailingIcon(expanded = showStageMenu)
+                            }
+                        },
                         leadingIcon = { Icon(Icons.Filled.Engineering, contentDescription = null) }
                     )
-                    ExposedDropdownMenu(
-                        expanded = showStageMenu,
-                        onDismissRequest = { showStageMenu = false }
-                    ) {
-                        DefaultStages.all.forEach { stage ->
-                            DropdownMenuItem(
-                                text = { Text("${stage.emoji} ${stage.name}") },
-                                onClick = {
-                                    viewModel.updateCurrentStage(stage.name)
-                                    showStageMenu = false
-                                }
-                            )
+                    if (state.isProjectOwner) {
+                        ExposedDropdownMenu(
+                            expanded = showStageMenu,
+                            onDismissRequest = { showStageMenu = false }
+                        ) {
+                            DefaultStages.all.forEach { stage ->
+                                DropdownMenuItem(
+                                    text = { Text("${stage.emoji} ${stage.name}") },
+                                    onClick = {
+                                        viewModel.updateCurrentStage(stage.name)
+                                        showStageMenu = false
+                                    }
+                                )
+                            }
                         }
                     }
                 }
             }
 
-            // Sign Out
-            item {
-                Spacer(modifier = Modifier.height(16.dp))
-                OutlinedButton(
-                    onClick = {
-                        viewModel.signOut()
-                        onSignOut()
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = MaterialTheme.colorScheme.error
-                    )
-                ) {
-                    Icon(Icons.Filled.Logout, contentDescription = null)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Sign Out")
+            // Delete Project (owner only)
+            if (state.isProjectOwner) {
+                item {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    HorizontalDivider(color = MaterialTheme.colorScheme.error.copy(alpha = 0.3f))
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
+                item {
+                    Card(
+                        shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f)
+                        )
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Text(
+                                text = "Danger Zone",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "Deleting the project will remove all expenses, members, and settings permanently.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Spacer(modifier = Modifier.height(12.dp))
+                            OutlinedButton(
+                                onClick = { showDeleteDialog = true },
+                                modifier = Modifier.fillMaxWidth(),
+                                enabled = !state.isLoading,
+                                colors = ButtonDefaults.outlinedButtonColors(
+                                    contentColor = MaterialTheme.colorScheme.error
+                                )
+                            ) {
+                                if (state.isLoading) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(18.dp),
+                                        strokeWidth = 2.dp,
+                                        color = MaterialTheme.colorScheme.error
+                                    )
+                                } else {
+                                    Icon(Icons.Filled.DeleteForever, contentDescription = null)
+                                }
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("Delete Project")
+                            }
+                        }
+                    }
                 }
             }
 

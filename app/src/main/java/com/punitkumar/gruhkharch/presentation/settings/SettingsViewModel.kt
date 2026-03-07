@@ -20,7 +20,9 @@ data class SettingsState(
     val members: List<Member> = emptyList(),
     val budget: String = "",
     val currentStage: String = "",
+    val isProjectOwner: Boolean = false,
     val isLoading: Boolean = false,
+    val isProjectDeleted: Boolean = false,
     val message: String? = null
 )
 
@@ -50,6 +52,7 @@ class SettingsViewModel @Inject constructor(
 
             val projectId = currentProjectHolder.projectId.value ?: return@launch
             val project = projectRepository.getProject(projectId) ?: return@launch
+            val currentUserId = authRepository.currentUserId ?: ""
 
             _state.update {
                 it.copy(
@@ -57,7 +60,8 @@ class SettingsViewModel @Inject constructor(
                     inviteCode = project.inviteCode,
                     members = project.members,
                     budget = if (project.budget > 0) project.budget.toLong().toString() else "",
-                    currentStage = project.currentStage
+                    currentStage = project.currentStage,
+                    isProjectOwner = project.createdBy == currentUserId
                 )
             }
         }
@@ -91,6 +95,22 @@ class SettingsViewModel @Inject constructor(
             projectRepository.regenerateInviteCode(project.id)
                 .onSuccess { code ->
                     _state.update { it.copy(inviteCode = code, message = "New invite code generated") }
+                }
+        }
+    }
+
+    fun deleteProject() {
+        val project = _state.value.project ?: return
+        if (!_state.value.isProjectOwner) return
+        viewModelScope.launch {
+            _state.update { it.copy(isLoading = true) }
+            projectRepository.deleteProject(project.id)
+                .onSuccess {
+                    currentProjectHolder.clear()
+                    _state.update { it.copy(isLoading = false, isProjectDeleted = true) }
+                }
+                .onFailure { e ->
+                    _state.update { it.copy(isLoading = false, message = e.message ?: "Failed to delete project") }
                 }
         }
     }
