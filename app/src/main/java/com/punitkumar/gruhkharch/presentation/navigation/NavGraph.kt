@@ -34,6 +34,7 @@ data class BottomNavItem(
 val bottomNavItems = listOf(
     BottomNavItem("Home", Routes.Home.route, Icons.Filled.Home, Icons.Outlined.Home),
     BottomNavItem("Expenses", Routes.Expenses.route, Icons.Filled.Receipt, Icons.Outlined.Receipt),
+    BottomNavItem("Projects", Routes.ProjectsList.route, Icons.Filled.Folder, Icons.Outlined.Folder),
     BottomNavItem("Reports", Routes.Reports.route, Icons.Filled.BarChart, Icons.Outlined.BarChart),
     BottomNavItem("Settings", Routes.Settings.route, Icons.Filled.Settings, Icons.Outlined.Settings)
 )
@@ -67,7 +68,7 @@ fun AppNavGraph(isSignedIn: Boolean) {
                             selected = selected,
                             onClick = {
                                 navController.navigate(item.route) {
-                                    popUpTo(Routes.Home.route) {
+                                    popUpTo(navController.graph.startDestinationId) {
                                         saveState = true
                                     }
                                     launchSingleTop = true
@@ -113,6 +114,7 @@ fun AppNavGraph(isSignedIn: Boolean) {
                 ProjectsListScreen(
                     onProjectSelected = {
                         navController.navigate(Routes.Home.route) {
+                            popUpTo(Routes.ProjectsList.route) { inclusive = true }
                             launchSingleTop = true
                         }
                     },
