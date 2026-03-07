@@ -2,6 +2,7 @@ package com.punitkumar.gruhkharch.presentation.reports
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.punitkumar.gruhkharch.domain.CurrentProjectHolder
 import com.punitkumar.gruhkharch.domain.model.Expense
 import com.punitkumar.gruhkharch.domain.repository.AuthRepository
 import com.punitkumar.gruhkharch.domain.repository.ExpenseRepository
@@ -30,7 +31,8 @@ data class ReportsState(
 class ReportsViewModel @Inject constructor(
     private val expenseRepository: ExpenseRepository,
     private val projectRepository: ProjectRepository,
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    private val currentProjectHolder: CurrentProjectHolder
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(ReportsState())
@@ -42,9 +44,8 @@ class ReportsViewModel @Inject constructor(
 
     private fun loadReports() {
         viewModelScope.launch {
-            val userId = authRepository.currentUserId ?: return@launch
-            val projects = projectRepository.getProjectsForUser(userId)
-            val project = projects.firstOrNull() ?: return@launch
+            val projectId = currentProjectHolder.projectId.value ?: return@launch
+            val project = projectRepository.getProject(projectId) ?: return@launch
 
             _state.update { it.copy(budget = project.budget) }
 

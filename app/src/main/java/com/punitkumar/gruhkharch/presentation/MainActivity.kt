@@ -21,12 +21,8 @@ class MainActivity : ComponentActivity() {
             GruhKharchTheme {
                 val authViewModel: AuthViewModel = hiltViewModel()
                 val isSignedIn by authViewModel.isSignedIn.collectAsState()
-                val hasProject by authViewModel.hasProject.collectAsState()
 
-                AppNavGraph(
-                    isSignedIn = isSignedIn,
-                    hasProject = hasProject
-                )
+                AppNavGraph(isSignedIn = isSignedIn)
             }
         }
     }

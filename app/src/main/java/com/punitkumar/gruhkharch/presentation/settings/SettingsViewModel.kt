@@ -2,6 +2,7 @@ package com.punitkumar.gruhkharch.presentation.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.punitkumar.gruhkharch.domain.CurrentProjectHolder
 import com.punitkumar.gruhkharch.domain.model.Member
 import com.punitkumar.gruhkharch.domain.model.Project
 import com.punitkumar.gruhkharch.domain.repository.AuthRepository
@@ -26,7 +27,8 @@ data class SettingsState(
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     private val authRepository: AuthRepository,
-    private val projectRepository: ProjectRepository
+    private val projectRepository: ProjectRepository,
+    private val currentProjectHolder: CurrentProjectHolder
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(SettingsState())
@@ -46,9 +48,8 @@ class SettingsViewModel @Inject constructor(
                 )
             }
 
-            val userId = authRepository.currentUserId ?: return@launch
-            val projects = projectRepository.getProjectsForUser(userId)
-            val project = projects.firstOrNull() ?: return@launch
+            val projectId = currentProjectHolder.projectId.value ?: return@launch
+            val project = projectRepository.getProject(projectId) ?: return@launch
 
             _state.update {
                 it.copy(
@@ -96,6 +97,7 @@ class SettingsViewModel @Inject constructor(
 
     fun signOut() {
         authRepository.signOut()
+        currentProjectHolder.clear()
     }
 
     fun clearMessage() {
