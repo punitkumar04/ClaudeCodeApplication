@@ -1,6 +1,7 @@
 package com.punitkumar.gruhkharch.presentation.expenses
 
 import androidx.compose.animation.*
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -10,9 +11,11 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.punitkumar.gruhkharch.domain.model.Expense
 import com.punitkumar.gruhkharch.presentation.components.ExpenseCard
 import com.punitkumar.gruhkharch.presentation.components.FilterSheet
 import com.punitkumar.gruhkharch.util.CurrencyFormatter
@@ -24,6 +27,35 @@ fun ExpensesScreen(
     viewModel: ExpensesViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
+    var expenseToDelete by remember { mutableStateOf<Expense?>(null) }
+
+    // Delete confirmation dialog
+    expenseToDelete?.let { expense ->
+        AlertDialog(
+            onDismissRequest = { expenseToDelete = null },
+            icon = { Icon(Icons.Filled.Delete, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
+            title = { Text("Delete Expense") },
+            text = {
+                Text("Are you sure you want to delete \"${expense.title}\" (${CurrencyFormatter.formatIndianCurrency(expense.amount)})?")
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        viewModel.deleteExpense(expense)
+                        expenseToDelete = null
+                    },
+                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                ) {
+                    Text("Delete")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { expenseToDelete = null }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
 
     Scaffold(
         topBar = {
@@ -174,19 +206,75 @@ fun ExpensesScreen(
                             HorizontalDivider()
                         }
 
-                        // Expense items
+                        // Expense items with swipe-to-delete
                         items(
                             items = expenses,
                             key = { it.id }
                         ) { expense ->
-                            ExpenseCard(
+                            SwipeToDismissExpenseCard(
                                 expense = expense,
-                                onClick = { onExpenseClick(expense.id) }
+                                onClick = { onExpenseClick(expense.id) },
+                                onDelete = { expenseToDelete = expense }
                             )
                         }
                     }
                 }
             }
         }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SwipeToDismissExpenseCard(
+    expense: Expense,
+    onClick: () -> Unit,
+    onDelete: () -> Unit
+) {
+    val dismissState = rememberSwipeToDismissBoxState(
+        confirmValueChange = { dismissValue ->
+            if (dismissValue == SwipeToDismissBoxValue.EndToStart) {
+                onDelete()
+                false // Don't actually dismiss; let the dialog handle it
+            } else {
+                false
+            }
+        }
+    )
+
+    SwipeToDismissBox(
+        state = dismissState,
+        backgroundContent = {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.errorContainer),
+                contentAlignment = Alignment.CenterEnd
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 20.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        Icons.Filled.Delete,
+                        contentDescription = "Delete",
+                        tint = MaterialTheme.colorScheme.onErrorContainer
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        "Delete",
+                        color = MaterialTheme.colorScheme.onErrorContainer,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+            }
+        },
+        enableDismissFromStartToEnd = false,
+        enableDismissFromEndToStart = true
+    ) {
+        ExpenseCard(
+            expense = expense,
+            onClick = onClick
+        )
     }
 }

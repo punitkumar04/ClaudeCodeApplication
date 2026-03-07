@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.punitkumar.gruhkharch.domain.CurrentProjectHolder
 import com.punitkumar.gruhkharch.domain.model.*
 import com.punitkumar.gruhkharch.domain.repository.AuthRepository
+import com.punitkumar.gruhkharch.domain.repository.ExpenseRepository
 import com.punitkumar.gruhkharch.domain.repository.ProjectRepository
 import com.punitkumar.gruhkharch.domain.usecase.GetExpensesUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -28,6 +29,7 @@ data class ExpensesState(
 @HiltViewModel
 class ExpensesViewModel @Inject constructor(
     private val getExpensesUseCase: GetExpensesUseCase,
+    private val expenseRepository: ExpenseRepository,
     private val projectRepository: ProjectRepository,
     private val authRepository: AuthRepository,
     private val currentProjectHolder: CurrentProjectHolder
@@ -88,6 +90,12 @@ class ExpensesViewModel @Inject constructor(
     fun clearFilters() {
         updateFilter(ExpenseFilter())
         _state.update { it.copy(searchQuery = "") }
+    }
+
+    fun deleteExpense(expense: Expense) {
+        viewModelScope.launch {
+            expenseRepository.deleteExpense(expense)
+        }
     }
 
     private fun groupExpenses(expenses: List<Expense>, groupBy: GroupBy): Map<String, List<Expense>> {
