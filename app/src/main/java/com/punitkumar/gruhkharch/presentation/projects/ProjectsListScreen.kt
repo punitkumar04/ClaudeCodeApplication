@@ -18,6 +18,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.punitkumar.gruhkharch.domain.model.Project
+import com.punitkumar.gruhkharch.presentation.theme.DangerRed
+import com.punitkumar.gruhkharch.presentation.theme.SuccessGreen
+import com.punitkumar.gruhkharch.presentation.theme.WarningAmber
 import com.punitkumar.gruhkharch.util.CurrencyFormatter
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -306,9 +309,9 @@ private fun ProjectCard(
                         .fillMaxWidth()
                         .height(6.dp),
                     color = when {
-                        progress >= 1.0f -> MaterialTheme.colorScheme.error
-                        progress >= 0.8f -> MaterialTheme.colorScheme.tertiary
-                        else -> MaterialTheme.colorScheme.primary
+                        progress >= 1.0f -> DangerRed
+                        progress >= 0.8f -> WarningAmber
+                        else -> SuccessGreen
                     },
                     trackColor = MaterialTheme.colorScheme.surfaceVariant
                 )
