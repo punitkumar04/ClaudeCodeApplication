@@ -88,10 +88,16 @@ fun ProjectsListScreen(
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "Create your first construction project to start tracking expenses",
+                        text = "Create a new project for projects to appear here",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                     )
+                    Spacer(modifier = Modifier.height(24.dp))
+                    Button(onClick = onCreateProject) {
+                        Icon(Icons.Filled.Add, contentDescription = null)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("New Project")
+                    }
                 }
             }
         } else {
