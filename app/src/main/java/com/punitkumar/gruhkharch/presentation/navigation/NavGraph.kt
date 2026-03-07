@@ -10,7 +10,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation.NavDestination.Companion.hierarchy
-import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -21,6 +20,7 @@ import com.punitkumar.gruhkharch.presentation.addexpense.AddExpenseScreen
 import com.punitkumar.gruhkharch.presentation.auth.AuthScreen
 import com.punitkumar.gruhkharch.presentation.expenses.ExpensesScreen
 import com.punitkumar.gruhkharch.presentation.home.HomeScreen
+import com.punitkumar.gruhkharch.presentation.projects.ProjectsListScreen
 import com.punitkumar.gruhkharch.presentation.reports.ReportsScreen
 import com.punitkumar.gruhkharch.presentation.settings.SettingsScreen
 
@@ -40,7 +40,7 @@ val bottomNavItems = listOf(
 )
 
 @Composable
-fun AppNavGraph(isSignedIn: Boolean, hasProject: Boolean) {
+fun AppNavGraph(isSignedIn: Boolean) {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
@@ -49,11 +49,7 @@ fun AppNavGraph(isSignedIn: Boolean, hasProject: Boolean) {
         bottomNavItems.any { it.route == dest.route }
     } == true
 
-    val startDestination = when {
-        !isSignedIn -> Routes.Auth.route
-        !hasProject -> Routes.CreateProject.route
-        else -> Routes.Home.route
-    }
+    val startDestination = if (!isSignedIn) Routes.Auth.route else Routes.ProjectsList.route
 
     Scaffold(
         bottomBar = {
@@ -72,7 +68,7 @@ fun AppNavGraph(isSignedIn: Boolean, hasProject: Boolean) {
                             selected = selected,
                             onClick = {
                                 navController.navigate(item.route) {
-                                    popUpTo(navController.graph.findStartDestination().id) {
+                                    popUpTo(Routes.Home.route) {
                                         saveState = true
                                     }
                                     launchSingleTop = true
@@ -107,9 +103,22 @@ fun AppNavGraph(isSignedIn: Boolean, hasProject: Boolean) {
             composable(Routes.Auth.route) {
                 AuthScreen(
                     onSignInSuccess = {
-                        navController.navigate(Routes.CreateProject.route) {
+                        navController.navigate(Routes.ProjectsList.route) {
                             popUpTo(Routes.Auth.route) { inclusive = true }
                         }
+                    }
+                )
+            }
+
+            composable(Routes.ProjectsList.route) {
+                ProjectsListScreen(
+                    onProjectSelected = {
+                        navController.navigate(Routes.Home.route) {
+                            launchSingleTop = true
+                        }
+                    },
+                    onCreateProject = {
+                        navController.navigate(Routes.CreateProject.route)
                     }
                 )
             }
@@ -118,7 +127,7 @@ fun AppNavGraph(isSignedIn: Boolean, hasProject: Boolean) {
                 com.punitkumar.gruhkharch.presentation.auth.CreateProjectScreen(
                     onProjectCreated = {
                         navController.navigate(Routes.Home.route) {
-                            popUpTo(0) { inclusive = true }
+                            popUpTo(Routes.ProjectsList.route)
                         }
                     },
                     onJoinProject = {
@@ -131,7 +140,7 @@ fun AppNavGraph(isSignedIn: Boolean, hasProject: Boolean) {
                 com.punitkumar.gruhkharch.presentation.auth.JoinProjectScreen(
                     onProjectJoined = {
                         navController.navigate(Routes.Home.route) {
-                            popUpTo(0) { inclusive = true }
+                            popUpTo(Routes.ProjectsList.route)
                         }
                     },
                     onBack = { navController.popBackStack() }

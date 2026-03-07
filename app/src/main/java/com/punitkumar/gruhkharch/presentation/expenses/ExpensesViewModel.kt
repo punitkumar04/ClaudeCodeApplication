@@ -2,6 +2,7 @@ package com.punitkumar.gruhkharch.presentation.expenses
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.punitkumar.gruhkharch.domain.CurrentProjectHolder
 import com.punitkumar.gruhkharch.domain.model.*
 import com.punitkumar.gruhkharch.domain.repository.AuthRepository
 import com.punitkumar.gruhkharch.domain.repository.ProjectRepository
@@ -28,7 +29,8 @@ data class ExpensesState(
 class ExpensesViewModel @Inject constructor(
     private val getExpensesUseCase: GetExpensesUseCase,
     private val projectRepository: ProjectRepository,
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    private val currentProjectHolder: CurrentProjectHolder
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(ExpensesState())
@@ -42,10 +44,8 @@ class ExpensesViewModel @Inject constructor(
 
     private fun loadData() {
         viewModelScope.launch {
-            val userId = authRepository.currentUserId ?: return@launch
-            val projects = projectRepository.getProjectsForUser(userId)
-            val project = projects.firstOrNull() ?: return@launch
-            projectId = project.id
+            projectId = currentProjectHolder.projectId.value ?: return@launch
+            val project = projectRepository.getProject(projectId) ?: return@launch
             _state.update { it.copy(members = project.members) }
             observeExpenses()
         }

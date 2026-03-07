@@ -2,6 +2,7 @@ package com.punitkumar.gruhkharch.presentation.addexpense
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.punitkumar.gruhkharch.domain.CurrentProjectHolder
 import com.punitkumar.gruhkharch.domain.model.*
 import com.punitkumar.gruhkharch.domain.repository.AuthRepository
 import com.punitkumar.gruhkharch.domain.repository.ExpenseRepository
@@ -41,7 +42,8 @@ class AddExpenseViewModel @Inject constructor(
     private val addExpenseUseCase: AddExpenseUseCase,
     private val expenseRepository: ExpenseRepository,
     private val projectRepository: ProjectRepository,
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    private val currentProjectHolder: CurrentProjectHolder
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(AddExpenseState())
@@ -55,10 +57,8 @@ class AddExpenseViewModel @Inject constructor(
 
     private fun loadProjectData() {
         viewModelScope.launch {
-            val userId = authRepository.currentUserId ?: return@launch
-            val projects = projectRepository.getProjectsForUser(userId)
-            val project = projects.firstOrNull() ?: return@launch
-            projectId = project.id
+            projectId = currentProjectHolder.projectId.value ?: return@launch
+            val project = projectRepository.getProject(projectId) ?: return@launch
 
             val currentUser = authRepository.currentUser
             val defaultMember = project.members.find { it.userId == currentUser?.id }

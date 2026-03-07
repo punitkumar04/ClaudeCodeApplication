@@ -2,6 +2,7 @@ package com.punitkumar.gruhkharch.presentation.auth
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.punitkumar.gruhkharch.domain.CurrentProjectHolder
 import com.punitkumar.gruhkharch.domain.model.Project
 import com.punitkumar.gruhkharch.domain.repository.AuthRepository
 import com.punitkumar.gruhkharch.domain.repository.ProjectRepository
@@ -13,7 +14,8 @@ import javax.inject.Inject
 @HiltViewModel
 class AuthViewModel @Inject constructor(
     private val authRepository: AuthRepository,
-    private val projectRepository: ProjectRepository
+    private val projectRepository: ProjectRepository,
+    private val currentProjectHolder: CurrentProjectHolder
 ) : ViewModel() {
 
     private val _isSignedIn = MutableStateFlow(authRepository.isSignedIn)
@@ -28,28 +30,12 @@ class AuthViewModel @Inject constructor(
     private val _authState = MutableStateFlow<AuthState>(AuthState.Idle)
     val authState: StateFlow<AuthState> = _authState.asStateFlow()
 
-    init {
-        checkForExistingProject()
-    }
-
-    private fun checkForExistingProject() {
-        viewModelScope.launch {
-            val userId = authRepository.currentUserId ?: return@launch
-            val projects = projectRepository.getProjectsForUser(userId)
-            if (projects.isNotEmpty()) {
-                _currentProject.value = projects.first()
-                _hasProject.value = true
-            }
-        }
-    }
-
     fun signInWithGoogle(idToken: String) {
         viewModelScope.launch {
             _authState.value = AuthState.Loading
             authRepository.signInWithGoogle(idToken)
                 .onSuccess {
                     _isSignedIn.value = true
-                    checkForExistingProject()
                     _authState.value = AuthState.Success
                 }
                 .onFailure {
@@ -69,6 +55,7 @@ class AuthViewModel @Inject constructor(
                 .onSuccess { project ->
                     _currentProject.value = project
                     _hasProject.value = true
+                    currentProjectHolder.setProject(project.id)
                     _authState.value = AuthState.Success
                 }
                 .onFailure {
@@ -88,6 +75,7 @@ class AuthViewModel @Inject constructor(
                 .onSuccess { project ->
                     _currentProject.value = project
                     _hasProject.value = true
+                    currentProjectHolder.setProject(project.id)
                     _authState.value = AuthState.Success
                 }
                 .onFailure {
@@ -101,6 +89,7 @@ class AuthViewModel @Inject constructor(
         _isSignedIn.value = false
         _hasProject.value = false
         _currentProject.value = null
+        currentProjectHolder.clear()
     }
 }
 
