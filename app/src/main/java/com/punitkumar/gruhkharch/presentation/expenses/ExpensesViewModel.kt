@@ -9,6 +9,7 @@ import com.punitkumar.gruhkharch.domain.repository.ExpenseRepository
 import com.punitkumar.gruhkharch.domain.repository.ProjectRepository
 import com.punitkumar.gruhkharch.domain.usecase.GetExpensesUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -41,24 +42,32 @@ class ExpensesViewModel @Inject constructor(
     val state: StateFlow<ExpensesState> = _state.asStateFlow()
 
     private var projectId: String = ""
+    private var dataJob: Job? = null
 
     init {
-        loadData()
+        observeProjectChanges()
     }
 
-    private fun loadData() {
+    private fun observeProjectChanges() {
         viewModelScope.launch {
-            val id = currentProjectHolder.projectId.value
-            if (id == null) {
-                _state.update { it.copy(hasProject = false, isLoading = false) }
-                return@launch
+            currentProjectHolder.projectId.collect { id ->
+                dataJob?.cancel()
+                if (id == null) {
+                    _state.value = ExpensesState(hasProject = false, isLoading = false)
+                } else {
+                    _state.value = ExpensesState()
+                    projectId = id
+                    dataJob = launch { loadData() }
+                }
             }
-            projectId = id
-            val userId = authRepository.currentUserId ?: return@launch
-            val project = projectRepository.getProject(projectId) ?: return@launch
-            _state.update { it.copy(members = project.members, currentUserId = userId) }
-            observeExpenses()
         }
+    }
+
+    private suspend fun loadData() {
+        val userId = authRepository.currentUserId ?: return
+        val project = projectRepository.getProject(projectId) ?: return
+        _state.update { it.copy(members = project.members, currentUserId = userId) }
+        observeExpenses()
     }
 
     private fun observeExpenses() {
