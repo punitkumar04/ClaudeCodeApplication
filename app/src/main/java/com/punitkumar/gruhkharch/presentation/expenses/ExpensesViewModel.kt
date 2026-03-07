@@ -24,7 +24,8 @@ data class ExpensesState(
     val isLoading: Boolean = true,
     val searchQuery: String = "",
     val showFilters: Boolean = false,
-    val currentUserId: String = ""
+    val currentUserId: String = "",
+    val hasProject: Boolean = true
 )
 
 @HiltViewModel
@@ -47,7 +48,12 @@ class ExpensesViewModel @Inject constructor(
 
     private fun loadData() {
         viewModelScope.launch {
-            projectId = currentProjectHolder.projectId.value ?: return@launch
+            val id = currentProjectHolder.projectId.value
+            if (id == null) {
+                _state.update { it.copy(hasProject = false, isLoading = false) }
+                return@launch
+            }
+            projectId = id
             val userId = authRepository.currentUserId ?: return@launch
             val project = projectRepository.getProject(projectId) ?: return@launch
             _state.update { it.copy(members = project.members, currentUserId = userId) }

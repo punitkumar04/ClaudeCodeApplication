@@ -45,7 +45,7 @@ class ProjectsListViewModel @Inject constructor(
             val projects = projectRepository.getProjectsForUser(userId)
 
             if (projects.isEmpty()) {
-                _state.update { it.copy(isLoading = false) }
+                _state.update { it.copy(projects = emptyList(), isLoading = false) }
                 return@launch
             }
 
@@ -83,8 +83,18 @@ class ProjectsListViewModel @Inject constructor(
             val project = projectRepository.getProject(projectId) ?: return@launch
             val userId = authRepository.currentUserId ?: return@launch
             if (project.createdBy != userId) return@launch
+
+            // Immediately remove from UI
+            _state.update { state ->
+                state.copy(projects = state.projects.filter { it.project.id != projectId })
+            }
+
+            // Clear current project if it was the deleted one
+            if (currentProjectHolder.projectId.value == projectId) {
+                currentProjectHolder.clear()
+            }
+
             projectRepository.deleteProject(projectId)
-            loadProjects()
         }
     }
 
