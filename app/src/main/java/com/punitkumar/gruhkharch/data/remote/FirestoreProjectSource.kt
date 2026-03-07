@@ -50,6 +50,20 @@ class FirestoreProjectSource @Inject constructor(
         }
     }
 
+    suspend fun deleteProject(projectId: String) {
+        // Delete all expenses subcollection first
+        val expenses = firestore.collection(Constants.FIRESTORE_PROJECTS)
+            .document(projectId)
+            .collection(Constants.FIRESTORE_EXPENSES)
+            .get()
+            .await()
+        for (doc in expenses.documents) {
+            doc.reference.delete().await()
+        }
+        // Delete the project document
+        projectsCollection.document(projectId).delete().await()
+    }
+
     fun observeProject(projectId: String): Flow<Map<String, Any?>?> = callbackFlow {
         val listener = projectsCollection.document(projectId)
             .addSnapshotListener { snapshot, error ->

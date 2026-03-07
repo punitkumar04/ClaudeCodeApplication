@@ -1,6 +1,8 @@
 package com.punitkumar.gruhkharch.presentation.projects
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -15,6 +17,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.punitkumar.gruhkharch.domain.model.Project
 import com.punitkumar.gruhkharch.util.CurrencyFormatter
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -25,6 +28,35 @@ fun ProjectsListScreen(
     viewModel: ProjectsListViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
+    var projectToDelete by remember { mutableStateOf<Project?>(null) }
+
+    // Delete confirmation dialog
+    projectToDelete?.let { project ->
+        AlertDialog(
+            onDismissRequest = { projectToDelete = null },
+            icon = { Icon(Icons.Filled.Delete, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
+            title = { Text("Delete Project") },
+            text = {
+                Text("Are you sure you want to delete \"${project.name}\"? All expenses in this project will also be deleted. This action cannot be undone.")
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        viewModel.deleteProject(project.id)
+                        projectToDelete = null
+                    },
+                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                ) {
+                    Text("Delete")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { projectToDelete = null }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
 
     Scaffold(
         topBar = {
@@ -117,11 +149,16 @@ fun ProjectsListScreen(
                 }
 
                 items(state.projects, key = { it.project.id }) { projectWithTotal ->
+                    val isOwner = projectWithTotal.project.createdBy == state.currentUserId
                     ProjectCard(
                         projectWithTotal = projectWithTotal,
+                        isOwner = isOwner,
                         onClick = {
                             viewModel.selectProject(projectWithTotal.project.id)
                             onProjectSelected(projectWithTotal.project.id)
+                        },
+                        onDelete = {
+                            projectToDelete = projectWithTotal.project
                         }
                     )
                 }
@@ -133,17 +170,24 @@ fun ProjectsListScreen(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun ProjectCard(
     projectWithTotal: ProjectWithTotal,
-    onClick: () -> Unit
+    isOwner: Boolean,
+    onClick: () -> Unit,
+    onDelete: () -> Unit
 ) {
     val project = projectWithTotal.project
+    var showMenu by remember { mutableStateOf(false) }
 
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick),
+            .combinedClickable(
+                onClick = onClick,
+                onLongClick = { if (isOwner) showMenu = true }
+            ),
         shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
@@ -177,11 +221,42 @@ private fun ProjectCard(
                         )
                     }
                 }
-                Icon(
-                    imageVector = Icons.Filled.ChevronRight,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                if (isOwner) {
+                    Box {
+                        IconButton(onClick = { showMenu = true }) {
+                            Icon(
+                                imageVector = Icons.Filled.MoreVert,
+                                contentDescription = "Options",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        DropdownMenu(
+                            expanded = showMenu,
+                            onDismissRequest = { showMenu = false }
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text("Delete Project", color = MaterialTheme.colorScheme.error) },
+                                onClick = {
+                                    showMenu = false
+                                    onDelete()
+                                },
+                                leadingIcon = {
+                                    Icon(
+                                        Icons.Filled.Delete,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.error
+                                    )
+                                }
+                            )
+                        }
+                    }
+                } else {
+                    Icon(
+                        imageVector = Icons.Filled.ChevronRight,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(12.dp))

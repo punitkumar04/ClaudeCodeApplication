@@ -23,7 +23,8 @@ data class ExpensesState(
     val members: List<Member> = emptyList(),
     val isLoading: Boolean = true,
     val searchQuery: String = "",
-    val showFilters: Boolean = false
+    val showFilters: Boolean = false,
+    val currentUserId: String = ""
 )
 
 @HiltViewModel
@@ -47,8 +48,9 @@ class ExpensesViewModel @Inject constructor(
     private fun loadData() {
         viewModelScope.launch {
             projectId = currentProjectHolder.projectId.value ?: return@launch
+            val userId = authRepository.currentUserId ?: return@launch
             val project = projectRepository.getProject(projectId) ?: return@launch
-            _state.update { it.copy(members = project.members) }
+            _state.update { it.copy(members = project.members, currentUserId = userId) }
             observeExpenses()
         }
     }
@@ -92,7 +94,12 @@ class ExpensesViewModel @Inject constructor(
         _state.update { it.copy(searchQuery = "") }
     }
 
+    fun canDeleteExpense(expense: Expense): Boolean {
+        return expense.createdBy == _state.value.currentUserId
+    }
+
     fun deleteExpense(expense: Expense) {
+        if (!canDeleteExpense(expense)) return
         viewModelScope.launch {
             expenseRepository.deleteExpense(expense)
         }
