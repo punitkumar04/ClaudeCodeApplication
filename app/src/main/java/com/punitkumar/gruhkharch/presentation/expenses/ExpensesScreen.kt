@@ -206,16 +206,24 @@ fun ExpensesScreen(
                             HorizontalDivider()
                         }
 
-                        // Expense items with swipe-to-delete
+                        // Expense items with swipe-to-delete (only for creator)
                         items(
                             items = expenses,
                             key = { it.id }
                         ) { expense ->
-                            SwipeToDismissExpenseCard(
-                                expense = expense,
-                                onClick = { onExpenseClick(expense.id) },
-                                onDelete = { expenseToDelete = expense }
-                            )
+                            val canDelete = viewModel.canDeleteExpense(expense)
+                            if (canDelete) {
+                                SwipeToDismissExpenseCard(
+                                    expense = expense,
+                                    onClick = { onExpenseClick(expense.id) },
+                                    onDelete = { expenseToDelete = expense }
+                                )
+                            } else {
+                                ExpenseCard(
+                                    expense = expense,
+                                    onClick = { onExpenseClick(expense.id) }
+                                )
+                            }
                         }
                     }
                 }

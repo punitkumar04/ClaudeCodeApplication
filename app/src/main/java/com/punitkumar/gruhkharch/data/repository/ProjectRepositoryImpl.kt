@@ -182,6 +182,16 @@ class ProjectRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun deleteProject(projectId: String): Result<Unit> {
+        return try {
+            firestoreProjectSource.deleteProject(projectId)
+            projectDao.getProjectById(projectId)?.let { projectDao.deleteProject(it) }
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     private fun generateInviteCode(): String {
         val chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
         return (1..Constants.INVITE_CODE_LENGTH).map { chars.random() }.joinToString("")
