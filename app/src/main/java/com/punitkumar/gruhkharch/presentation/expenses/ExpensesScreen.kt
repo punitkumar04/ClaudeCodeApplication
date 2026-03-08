@@ -36,7 +36,7 @@ fun ExpensesScreen(
             Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(32.dp)) {
                 Icon(
                     imageVector = Icons.Filled.Folder,
-                    contentDescription = null,
+                    contentDescription = "No project",
                     modifier = Modifier.size(72.dp),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
                 )
@@ -65,7 +65,7 @@ fun ExpensesScreen(
     expenseToDelete?.let { expense ->
         AlertDialog(
             onDismissRequest = { expenseToDelete = null },
-            icon = { Icon(Icons.Filled.Delete, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
+            icon = { Icon(Icons.Filled.Delete, contentDescription = "Delete", tint = MaterialTheme.colorScheme.error) },
             title = { Text("Delete Expense") },
             text = {
                 Text("Are you sure you want to delete \"${expense.title}\" (${CurrencyFormatter.formatIndianCurrency(expense.amount)})?")
@@ -195,7 +195,7 @@ fun ExpensesScreen(
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Icon(
                             Icons.Filled.ReceiptLong,
-                            contentDescription = null,
+                            contentDescription = "No expenses",
                             modifier = Modifier.size(64.dp),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )

@@ -40,7 +40,7 @@ fun CreateProjectScreen(
         ) {
             Icon(
                 imageVector = Icons.Filled.Construction,
-                contentDescription = null,
+                contentDescription = "Create project",
                 modifier = Modifier.size(64.dp),
                 tint = MaterialTheme.colorScheme.primary
             )
@@ -94,7 +94,7 @@ fun CreateProjectScreen(
                         color = MaterialTheme.colorScheme.onPrimary
                     )
                 } else {
-                    Icon(Icons.Filled.Add, contentDescription = null)
+                    Icon(Icons.Filled.Add, contentDescription = "Add")
                     Spacer(modifier = Modifier.width(8.dp))
                     Text("Create Project", style = MaterialTheme.typography.titleMedium)
                 }
@@ -128,7 +128,7 @@ fun CreateProjectScreen(
                 modifier = Modifier.fillMaxWidth().height(48.dp),
                 shape = MaterialTheme.shapes.medium
             ) {
-                Icon(Icons.Filled.GroupAdd, contentDescription = null)
+                Icon(Icons.Filled.GroupAdd, contentDescription = "Join")
                 Spacer(modifier = Modifier.width(8.dp))
                 Text("Join with Invite Code")
             }
@@ -164,7 +164,7 @@ fun JoinProjectScreen(
         ) {
             Icon(
                 imageVector = Icons.Filled.GroupAdd,
-                contentDescription = null,
+                contentDescription = "Join project",
                 modifier = Modifier.size(64.dp),
                 tint = MaterialTheme.colorScheme.primary
             )
@@ -234,7 +234,7 @@ fun JoinProjectScreen(
             Spacer(modifier = Modifier.height(24.dp))
 
             TextButton(onClick = onBack) {
-                Icon(Icons.Filled.ArrowBack, contentDescription = null, modifier = Modifier.size(18.dp))
+                Icon(Icons.Filled.ArrowBack, contentDescription = "Back", modifier = Modifier.size(18.dp))
                 Spacer(modifier = Modifier.width(4.dp))
                 Text("Back to Create Project")
             }

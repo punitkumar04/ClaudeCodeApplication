@@ -45,7 +45,7 @@ fun SettingsScreen(
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
-            icon = { Icon(Icons.Filled.Warning, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
+            icon = { Icon(Icons.Filled.Warning, contentDescription = "Warning", tint = MaterialTheme.colorScheme.error) },
             title = { Text("Delete Project") },
             text = {
                 Text(
@@ -100,7 +100,7 @@ fun SettingsScreen(
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Filled.Person, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                            Icon(Icons.Filled.Person, contentDescription = "Profile", tint = MaterialTheme.colorScheme.primary)
                             Spacer(modifier = Modifier.width(12.dp))
                             Column {
                                 Text(
@@ -131,7 +131,7 @@ fun SettingsScreen(
                                 contentColor = MaterialTheme.colorScheme.error
                             )
                         ) {
-                            Icon(Icons.Filled.Logout, contentDescription = null)
+                            Icon(Icons.Filled.Logout, contentDescription = "Sign out")
                             Spacer(modifier = Modifier.width(8.dp))
                             Text("Sign Out")
                         }
@@ -165,7 +165,7 @@ fun SettingsScreen(
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Filled.Home, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                            Icon(Icons.Filled.Home, contentDescription = "Project", tint = MaterialTheme.colorScheme.primary)
                             Spacer(modifier = Modifier.width(12.dp))
                             Text(
                                 text = state.project?.name ?: "No Project",
@@ -228,7 +228,7 @@ fun SettingsScreen(
                     ) {
                         Icon(
                             Icons.Filled.Person,
-                            contentDescription = null,
+                            contentDescription = "Member",
                             tint = MaterialTheme.colorScheme.primary
                         )
                         Spacer(modifier = Modifier.width(12.dp))
@@ -374,7 +374,7 @@ fun SettingsScreen(
                                         color = MaterialTheme.colorScheme.error
                                     )
                                 } else {
-                                    Icon(Icons.Filled.DeleteForever, contentDescription = null)
+                                    Icon(Icons.Filled.DeleteForever, contentDescription = "Delete project")
                                 }
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text("Delete Project")

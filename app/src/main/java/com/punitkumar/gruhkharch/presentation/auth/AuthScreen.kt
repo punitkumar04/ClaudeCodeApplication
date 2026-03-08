@@ -15,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.google.android.gms.auth.api.signin.GoogleSignIn
@@ -63,7 +64,7 @@ fun AuthScreen(
         ) {
             Icon(
                 imageVector = Icons.Filled.Home,
-                contentDescription = null,
+                contentDescription = stringResource(R.string.construction_khata),
                 modifier = Modifier.size(80.dp),
                 tint = MaterialTheme.colorScheme.primary
             )
@@ -71,7 +72,7 @@ fun AuthScreen(
             Spacer(modifier = Modifier.height(24.dp))
 
             Text(
-                text = "Construction Khata",
+                text = stringResource(R.string.construction_khata),
                 style = MaterialTheme.typography.headlineLarge,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary
@@ -80,7 +81,7 @@ fun AuthScreen(
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = "House Construction\nExpense Tracker",
+                text = stringResource(R.string.house_construction_expense_tracker),
                 style = MaterialTheme.typography.titleMedium,
                 textAlign = TextAlign.Center,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -110,7 +111,7 @@ fun AuthScreen(
                     )
                 } else {
                     Text(
-                        text = "Sign in with Google",
+                        text = stringResource(R.string.sign_in_with_google),
                         style = MaterialTheme.typography.titleMedium
                     )
                 }
