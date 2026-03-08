@@ -12,7 +12,7 @@ import com.punitkumar.gruhkharch.data.local.entity.ProjectEntity
 @Database(
     entities = [ExpenseEntity::class, ProjectEntity::class],
     version = 1,
-    exportSchema = false
+    exportSchema = true
 )
 @TypeConverters(Converters::class)
 abstract class GruhKharchDatabase : RoomDatabase() {

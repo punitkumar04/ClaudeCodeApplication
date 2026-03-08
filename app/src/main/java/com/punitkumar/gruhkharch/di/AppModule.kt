@@ -45,7 +45,7 @@ object AppModule {
             context,
             GruhKharchDatabase::class.java,
             Constants.DB_NAME
-        ).fallbackToDestructiveMigration().build()
+        ).build()
     }
 
     @Provides

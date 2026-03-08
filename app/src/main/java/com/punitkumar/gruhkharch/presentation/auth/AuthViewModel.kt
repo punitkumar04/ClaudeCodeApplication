@@ -84,6 +84,10 @@ class AuthViewModel @Inject constructor(
         }
     }
 
+    fun onSignInFailed(message: String) {
+        _authState.value = AuthState.Error(message)
+    }
+
     fun signOut() {
         authRepository.signOut()
         _isSignedIn.value = false

@@ -26,7 +26,8 @@ data class ExpensesState(
     val searchQuery: String = "",
     val showFilters: Boolean = false,
     val currentUserId: String = "",
-    val hasProject: Boolean = true
+    val hasProject: Boolean = true,
+    val error: String? = null
 )
 
 @HiltViewModel
@@ -64,9 +65,17 @@ class ExpensesViewModel @Inject constructor(
     }
 
     private suspend fun loadData() {
-        val userId = authRepository.currentUserId ?: return
-        val project = projectRepository.getProject(projectId) ?: return
-        _state.update { it.copy(members = project.members, currentUserId = userId) }
+        val userId = authRepository.currentUserId
+        if (userId == null) {
+            _state.update { it.copy(error = "Not signed in", isLoading = false) }
+            return
+        }
+        val project = projectRepository.getProject(projectId)
+        if (project == null) {
+            _state.update { it.copy(error = "Project not found", hasProject = false, isLoading = false) }
+            return
+        }
+        _state.update { it.copy(members = project.members, currentUserId = userId, error = null) }
         observeExpenses()
     }
 

@@ -20,6 +20,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
+import com.punitkumar.gruhkharch.R
 
 @Composable
 fun AuthScreen(
@@ -38,7 +39,7 @@ fun AuthScreen(
                 val account = task.getResult(ApiException::class.java)
                 account?.idToken?.let { viewModel.signInWithGoogle(it) }
             } catch (e: ApiException) {
-                // Sign in failed
+                viewModel.onSignInFailed("Google Sign-In failed: ${e.statusCode}")
             }
         }
     }
@@ -89,8 +90,9 @@ fun AuthScreen(
 
             Button(
                 onClick = {
+                    val webClientId = context.getString(R.string.default_web_client_id)
                     val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                        .requestIdToken("2466525394-0si5aquifc8j76hdrnkl4bhcl735m7m3.apps.googleusercontent.com")
+                        .requestIdToken(webClientId)
                         .requestEmail()
                         .build()
                     val googleSignInClient = GoogleSignIn.getClient(context, gso)

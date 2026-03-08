@@ -12,9 +12,12 @@ import com.punitkumar.gruhkharch.util.toEntity
 import com.punitkumar.gruhkharch.util.toDomain
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import android.util.Log
 import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
+
+private const val TAG = "ExpenseRepository"
 
 @Singleton
 class ExpenseRepositoryImpl @Inject constructor(
@@ -73,7 +76,7 @@ class ExpenseRepositoryImpl @Inject constructor(
                 firestoreExpenseSource.addExpense(newExpense.projectId, data)
                 expenseDao.markAsSynced(id)
             } catch (e: Exception) {
-                // Will be synced later
+                Log.w(TAG, "Failed to sync new expense to Firestore, will retry later", e)
             }
 
             Result.success(id)
@@ -93,7 +96,7 @@ class ExpenseRepositoryImpl @Inject constructor(
                 )
                 expenseDao.markAsSynced(expense.id)
             } catch (e: Exception) {
-                // Will be synced later
+                Log.w(TAG, "Failed to sync expense update to Firestore, will retry later", e)
             }
 
             Result.success(Unit)
@@ -110,7 +113,7 @@ class ExpenseRepositoryImpl @Inject constructor(
                 firestoreExpenseSource.deleteExpense(expense.projectId, expense.id)
                 expense.receiptUrl?.let { storageSource.deleteReceipt(it) }
             } catch (e: Exception) {
-                // Best effort
+                Log.w(TAG, "Failed to delete expense from Firestore", e)
             }
 
             Result.success(Unit)
@@ -134,11 +137,11 @@ class ExpenseRepositoryImpl @Inject constructor(
                     firestoreExpenseSource.updateExpense(projectId, entity.id, data)
                     expenseDao.markAsSynced(entity.id)
                 } catch (e: Exception) {
-                    // Skip this one
+                    Log.w(TAG, "Failed to sync expense ${entity.id}", e)
                 }
             }
         } catch (e: Exception) {
-            // Sync failed
+            Log.e(TAG, "Sync failed for project $projectId", e)
         }
     }
 
