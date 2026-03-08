@@ -64,7 +64,7 @@ class HomeViewModel @Inject constructor(
     private suspend fun loadDashboard(projectId: String) {
         val project = projectRepository.getProject(projectId)
         if (project == null) {
-            _state.update { it.copy(hasProject = false, isLoading = false) }
+            _state.update { it.copy(hasProject = false, isLoading = false, error = "Project not found") }
             return
         }
 
@@ -72,7 +72,8 @@ class HomeViewModel @Inject constructor(
             it.copy(
                 projectName = project.name,
                 budget = project.budget,
-                currentStage = project.currentStage
+                currentStage = project.currentStage,
+                error = null
             )
         }
 

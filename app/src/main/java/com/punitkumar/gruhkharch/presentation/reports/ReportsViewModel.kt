@@ -25,7 +25,8 @@ data class ReportsState(
     val topVendors: Map<String, Double> = emptyMap(),
     val isLoading: Boolean = true,
     val allExpenses: List<Expense> = emptyList(),
-    val hasProject: Boolean = true
+    val hasProject: Boolean = true,
+    val error: String? = null
 )
 
 @HiltViewModel
@@ -62,11 +63,11 @@ class ReportsViewModel @Inject constructor(
     private suspend fun loadReports(projectId: String) {
         val project = projectRepository.getProject(projectId)
         if (project == null) {
-            _state.update { it.copy(hasProject = false, isLoading = false) }
+            _state.update { it.copy(hasProject = false, isLoading = false, error = "Project not found") }
             return
         }
 
-        _state.update { it.copy(budget = project.budget) }
+        _state.update { it.copy(budget = project.budget, error = null) }
 
         expenseRepository.getExpenses(project.id).collect { expenses ->
             val total = expenses.sumOf { it.amount }
@@ -91,7 +92,7 @@ class ReportsViewModel @Inject constructor(
                 .mapValues { (_, exps) -> exps.sumOf { it.amount } }
 
             val vendorMap = expenses.filter { !it.vendor.isNullOrBlank() }
-                .groupBy { it.vendor!! }
+                .groupBy { it.vendor.orEmpty() }
                 .mapValues { (_, exps) -> exps.sumOf { it.amount } }
                 .toList().sortedByDescending { it.second }.take(10).toMap()
 

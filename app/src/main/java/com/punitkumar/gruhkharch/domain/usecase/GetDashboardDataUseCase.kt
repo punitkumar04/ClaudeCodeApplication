@@ -55,7 +55,7 @@ class GetDashboardDataUseCase @Inject constructor(
                 .mapValues { (_, list) -> list.sumOf { it.amount } }
 
             val topVendors = expenses.filter { !it.vendor.isNullOrBlank() }
-                .groupBy { it.vendor!! }
+                .groupBy { it.vendor.orEmpty() }
                 .mapValues { (_, list) -> list.sumOf { it.amount } }
                 .entries.sortedByDescending { it.value }
                 .take(10)

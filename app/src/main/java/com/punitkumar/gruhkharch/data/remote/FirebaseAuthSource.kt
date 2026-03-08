@@ -5,6 +5,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
+import com.punitkumar.gruhkharch.R
 import com.punitkumar.gruhkharch.domain.model.User
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.tasks.await
@@ -45,8 +46,9 @@ class FirebaseAuthSource @Inject constructor(
 
     fun signOut() {
         auth.signOut()
+        val webClientId = context.getString(R.string.default_web_client_id)
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-            .requestIdToken("YOUR_WEB_CLIENT_ID")
+            .requestIdToken(webClientId)
             .requestEmail()
             .build()
         GoogleSignIn.getClient(context, gso).signOut()
