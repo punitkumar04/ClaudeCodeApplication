@@ -8,6 +8,7 @@ import com.punitkumar.gruhkharch.domain.model.Project
 import com.punitkumar.gruhkharch.domain.repository.AuthRepository
 import com.punitkumar.gruhkharch.domain.repository.ProjectRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -36,33 +37,42 @@ class SettingsViewModel @Inject constructor(
     private val _state = MutableStateFlow(SettingsState())
     val state: StateFlow<SettingsState> = _state.asStateFlow()
 
+    private var observeJob: Job? = null
+
     init {
-        loadSettings()
+        loadUserProfile()
+        observeProject()
     }
 
-    private fun loadSettings() {
-        viewModelScope.launch {
-            val user = authRepository.currentUser
-            _state.update {
-                it.copy(
-                    userName = user?.name ?: "",
-                    userEmail = user?.email ?: ""
-                )
-            }
+    private fun loadUserProfile() {
+        val user = authRepository.currentUser
+        _state.update {
+            it.copy(
+                userName = user?.name ?: "",
+                userEmail = user?.email ?: ""
+            )
+        }
+    }
 
-            val projectId = currentProjectHolder.projectId.value ?: return@launch
-            val project = projectRepository.getProject(projectId) ?: return@launch
-            val currentUserId = authRepository.currentUserId ?: ""
+    private fun observeProject() {
+        val projectId = currentProjectHolder.projectId.value ?: return
+        val currentUserId = authRepository.currentUserId ?: ""
 
-            _state.update {
-                it.copy(
-                    project = project,
-                    inviteCode = project.inviteCode,
-                    members = project.members,
-                    budget = if (project.budget > 0) project.budget.toLong().toString() else "",
-                    currentStage = project.currentStage,
-                    isProjectOwner = project.createdBy == currentUserId
-                )
+        observeJob?.cancel()
+        observeJob = viewModelScope.launch {
+            projectRepository.observeProject(projectId).collect { project ->
+                if (project != null) {
+                    _state.update {
+                        it.copy(
+                            project = project,
+                            inviteCode = project.inviteCode,
+                            members = project.members,
+                            budget = if (project.budget > 0) project.budget.toLong().toString() else "",
+                            currentStage = project.currentStage,
+                            isProjectOwner = project.createdBy == currentUserId
+                        )
+                    }
+                }
             }
         }
     }
@@ -76,16 +86,25 @@ class SettingsViewModel @Inject constructor(
         val budgetAmount = _state.value.budget.toDoubleOrNull() ?: return
         viewModelScope.launch {
             projectRepository.updateBudget(project.id, budgetAmount)
-            _state.update { it.copy(message = "Budget updated") }
+                .onSuccess {
+                    _state.update { it.copy(message = "Budget updated") }
+                }
+                .onFailure { e ->
+                    _state.update { it.copy(message = e.message ?: "Failed to update budget") }
+                }
         }
     }
 
     fun updateCurrentStage(stage: String) {
-        _state.update { it.copy(currentStage = stage) }
         val project = _state.value.project ?: return
         viewModelScope.launch {
             projectRepository.updateCurrentStage(project.id, stage)
-            _state.update { it.copy(message = "Stage updated") }
+                .onSuccess {
+                    _state.update { it.copy(message = "Stage updated") }
+                }
+                .onFailure { e ->
+                    _state.update { it.copy(message = e.message ?: "Failed to update stage") }
+                }
         }
     }
 
@@ -94,7 +113,10 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             projectRepository.regenerateInviteCode(project.id)
                 .onSuccess { code ->
-                    _state.update { it.copy(inviteCode = code, message = "New invite code generated") }
+                    _state.update { it.copy(message = "New invite code generated") }
+                }
+                .onFailure { e ->
+                    _state.update { it.copy(message = e.message ?: "Failed to regenerate code") }
                 }
         }
     }
