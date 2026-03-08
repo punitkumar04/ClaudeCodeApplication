@@ -44,7 +44,7 @@ fun HomeScreen(
             ) {
                 Icon(
                     imageVector = Icons.Filled.Folder,
-                    contentDescription = null,
+                    contentDescription = "No project",
                     modifier = Modifier.size(72.dp),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
                 )
@@ -86,7 +86,7 @@ fun HomeScreen(
                 ) {
                     Icon(
                         Icons.Filled.Engineering,
-                        contentDescription = null,
+                        contentDescription = "Current stage",
                         modifier = Modifier.size(16.dp),
                         tint = MaterialTheme.colorScheme.primary
                     )
@@ -276,7 +276,7 @@ fun HomeScreen(
                     Text("View All")
                     Icon(
                         Icons.Filled.ArrowForward,
-                        contentDescription = null,
+                        contentDescription = "View all",
                         modifier = Modifier.size(16.dp)
                     )
                 }
@@ -299,7 +299,7 @@ fun HomeScreen(
                     ) {
                         Icon(
                             Icons.Filled.ReceiptLong,
-                            contentDescription = null,
+                            contentDescription = "No expenses",
                             modifier = Modifier.size(48.dp),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
                         )
@@ -342,7 +342,7 @@ fun HomeScreen(
                     ) {
                         Icon(
                             Icons.Filled.Receipt,
-                            contentDescription = null,
+                            contentDescription = "Expense",
                             tint = MaterialTheme.colorScheme.onPrimaryContainer,
                             modifier = Modifier.size(20.dp)
                         )

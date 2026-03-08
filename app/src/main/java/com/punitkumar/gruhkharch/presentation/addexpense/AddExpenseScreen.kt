@@ -74,7 +74,7 @@ fun AddExpenseScreen(
                 ) {
                     Icon(
                         imageVector = Icons.Filled.Lock,
-                        contentDescription = null,
+                        contentDescription = "Cannot edit",
                         modifier = Modifier.size(72.dp),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
                     )
@@ -365,7 +365,7 @@ fun AddExpenseScreen(
                         color = MaterialTheme.colorScheme.onPrimary
                     )
                 } else {
-                    Icon(Icons.Filled.Save, contentDescription = null)
+                    Icon(Icons.Filled.Save, contentDescription = "Save")
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         if (state.isEditing) "Update Expense" else "Save Expense",

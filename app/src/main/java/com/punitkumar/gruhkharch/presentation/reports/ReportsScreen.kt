@@ -41,7 +41,7 @@ fun ReportsScreen(
             Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(32.dp)) {
                 Icon(
                     imageVector = Icons.Filled.Folder,
-                    contentDescription = null,
+                    contentDescription = "No project",
                     modifier = Modifier.size(72.dp),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
                 )

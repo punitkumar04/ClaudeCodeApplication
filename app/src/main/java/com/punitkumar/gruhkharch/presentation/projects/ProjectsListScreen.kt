@@ -37,7 +37,7 @@ fun ProjectsListScreen(
     projectToDelete?.let { project ->
         AlertDialog(
             onDismissRequest = { projectToDelete = null },
-            icon = { Icon(Icons.Filled.Delete, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
+            icon = { Icon(Icons.Filled.Delete, contentDescription = "Delete", tint = MaterialTheme.colorScheme.error) },
             title = { Text("Delete Project") },
             text = {
                 Text("Are you sure you want to delete \"${project.name}\"? All expenses in this project will also be deleted. This action cannot be undone.")
@@ -82,7 +82,7 @@ fun ProjectsListScreen(
                     containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = MaterialTheme.colorScheme.onPrimary
                 ) {
-                    Icon(Icons.Filled.Add, contentDescription = null)
+                    Icon(Icons.Filled.Add, contentDescription = "Add")
                     Spacer(modifier = Modifier.width(8.dp))
                     Text("New Project")
                 }
@@ -112,7 +112,7 @@ fun ProjectsListScreen(
                 ) {
                     Icon(
                         imageVector = Icons.Filled.Construction,
-                        contentDescription = null,
+                        contentDescription = "No projects",
                         modifier = Modifier.size(72.dp),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
                     )
@@ -131,7 +131,7 @@ fun ProjectsListScreen(
                     )
                     Spacer(modifier = Modifier.height(24.dp))
                     Button(onClick = onCreateProject) {
-                        Icon(Icons.Filled.Add, contentDescription = null)
+                        Icon(Icons.Filled.Add, contentDescription = "Add")
                         Spacer(modifier = Modifier.width(8.dp))
                         Text("New Project")
                     }
@@ -205,7 +205,7 @@ private fun ProjectCard(
             ) {
                 Icon(
                     imageVector = Icons.Filled.Home,
-                    contentDescription = null,
+                    contentDescription = "Project",
                     tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(28.dp)
                 )
@@ -248,7 +248,7 @@ private fun ProjectCard(
                                 leadingIcon = {
                                     Icon(
                                         Icons.Filled.Delete,
-                                        contentDescription = null,
+                                        contentDescription = "Delete",
                                         tint = MaterialTheme.colorScheme.error
                                     )
                                 }
@@ -258,7 +258,7 @@ private fun ProjectCard(
                 } else {
                     Icon(
                         imageVector = Icons.Filled.ChevronRight,
-                        contentDescription = null,
+                        contentDescription = "Open project",
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
@@ -327,7 +327,7 @@ private fun ProjectCard(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
                         imageVector = Icons.Filled.People,
-                        contentDescription = null,
+                        contentDescription = "Members",
                         modifier = Modifier.size(14.dp),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )

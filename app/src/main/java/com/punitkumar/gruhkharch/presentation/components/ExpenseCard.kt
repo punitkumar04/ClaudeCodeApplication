@@ -95,7 +95,7 @@ fun ExpenseCard(
 
             Icon(
                 Icons.Filled.ChevronRight,
-                contentDescription = null,
+                contentDescription = "View details",
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.size(20.dp)
             )
