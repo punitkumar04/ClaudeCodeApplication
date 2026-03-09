@@ -16,7 +16,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.punitkumar.gruhkharch.R
 import com.punitkumar.gruhkharch.domain.model.*
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -54,7 +56,7 @@ fun AddExpenseScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(if (state.isEditing) "Edit Expense" else "Add Expense") },
+                title = { Text(if (state.isEditing) stringResource(R.string.edit_expense) else stringResource(R.string.add_expense)) },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface
                 )
@@ -80,14 +82,14 @@ fun AddExpenseScreen(
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
-                        text = "Cannot Edit",
+                        text = stringResource(R.string.cannot_edit),
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = androidx.compose.ui.text.font.FontWeight.Medium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "You can only edit expenses that you added",
+                        text = stringResource(R.string.cannot_edit_message),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                     )
@@ -368,7 +370,7 @@ fun AddExpenseScreen(
                     Icon(Icons.Filled.Save, contentDescription = "Save")
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        if (state.isEditing) "Update Expense" else "Save Expense",
+                        if (state.isEditing) stringResource(R.string.update_expense) else stringResource(R.string.save_expense),
                         style = MaterialTheme.typography.titleMedium
                     )
                 }

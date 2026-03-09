@@ -137,6 +137,20 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
+    fun deleteAccount(onAccountDeleted: () -> Unit) {
+        viewModelScope.launch {
+            _state.update { it.copy(isLoading = true) }
+            authRepository.deleteAccount()
+                .onSuccess {
+                    currentProjectHolder.clear()
+                    onAccountDeleted()
+                }
+                .onFailure { e ->
+                    _state.update { it.copy(isLoading = false, message = e.message ?: "Failed to delete account") }
+                }
+        }
+    }
+
     fun signOut() {
         authRepository.signOut()
         currentProjectHolder.clear()

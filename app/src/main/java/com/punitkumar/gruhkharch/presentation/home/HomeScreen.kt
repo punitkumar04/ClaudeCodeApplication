@@ -19,7 +19,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.punitkumar.gruhkharch.R
 import com.punitkumar.gruhkharch.presentation.theme.*
 import com.punitkumar.gruhkharch.util.CurrencyFormatter
 import com.punitkumar.gruhkharch.util.DateUtils
@@ -50,14 +52,14 @@ fun HomeScreen(
                 )
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
-                    text = "No Project Selected",
+                    text = stringResource(R.string.no_project_selected),
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Medium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "Select a project from the Projects tab to view your dashboard",
+                    text = stringResource(R.string.select_project_dashboard),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center
@@ -113,7 +115,7 @@ fun HomeScreen(
                     modifier = Modifier.padding(24.dp)
                 ) {
                     Text(
-                        text = "Total Spent",
+                        text = stringResource(R.string.total_spent),
                         style = MaterialTheme.typography.titleSmall,
                         color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
                     )
@@ -168,12 +170,12 @@ fun HomeScreen(
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 MonthCard(
-                    title = "This Month",
+                    title = stringResource(R.string.this_month),
                     amount = state.thisMonthSpent,
                     modifier = Modifier.weight(1f)
                 )
                 MonthCard(
-                    title = "Last Month",
+                    title = stringResource(R.string.last_month),
                     amount = state.lastMonthSpent,
                     modifier = Modifier.weight(1f)
                 )
@@ -184,7 +186,7 @@ fun HomeScreen(
         if (state.categoryBreakdown.isNotEmpty()) {
             item {
                 Text(
-                    text = "By Category",
+                    text = stringResource(R.string.by_category),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold
                 )
@@ -212,7 +214,7 @@ fun HomeScreen(
         if (state.stageBreakdown.isNotEmpty()) {
             item {
                 Text(
-                    text = "By Construction Stage",
+                    text = stringResource(R.string.by_construction_stage),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold
                 )
@@ -236,7 +238,7 @@ fun HomeScreen(
         if (state.memberBreakdown.isNotEmpty()) {
             item {
                 Text(
-                    text = "By Family Member",
+                    text = stringResource(R.string.by_family_member),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold
                 )
@@ -268,12 +270,12 @@ fun HomeScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Recent Expenses",
+                    text = stringResource(R.string.recent_expenses),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold
                 )
                 TextButton(onClick = onViewAllExpenses) {
-                    Text("View All")
+                    Text(stringResource(R.string.view_all))
                     Icon(
                         Icons.Filled.ArrowForward,
                         contentDescription = "View all",
@@ -305,12 +307,12 @@ fun HomeScreen(
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = "No expenses yet",
+                            text = stringResource(R.string.no_expenses_yet),
                             style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Text(
-                            text = "Tap + to add your first expense",
+                            text = stringResource(R.string.tap_to_add_expense),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                         )

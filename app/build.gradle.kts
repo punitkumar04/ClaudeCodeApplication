@@ -107,6 +107,9 @@ dependencies {
     // Google Sign In
     implementation(libs.google.auth)
 
+    // Splash Screen
+    implementation(libs.androidx.core.splashscreen)
+
     // Coil
     implementation(libs.coil.compose)
 

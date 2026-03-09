@@ -45,4 +45,79 @@
     <string name="invite_code_placeholder">ABC123</string>
     <string name="join_project_button">Join Project</string>
     <string name="back_to_create_project">Back to Create Project</string>
+
+    <!-- Home Screen -->
+    <string name="no_project_selected">No Project Selected</string>
+    <string name="select_project_dashboard">Select a project from the Projects tab to view your dashboard</string>
+    <string name="select_project_expenses">Select a project from the Projects tab to view expenses</string>
+    <string name="select_project_reports">Select a project from the Projects tab to view reports</string>
+    <string name="by_category">By Category</string>
+    <string name="by_construction_stage">By Construction Stage</string>
+    <string name="by_family_member">By Family Member</string>
+    <string name="recent_expenses">Recent Expenses</string>
+    <string name="view_all">View All</string>
+    <string name="no_expenses_yet">No expenses yet</string>
+    <string name="tap_to_add_expense">Tap + to add your first expense</string>
+    <string name="this_month">This Month</string>
+    <string name="last_month">Last Month</string>
+    <string name="stage_format">Stage: %1$s</string>
+    <string name="budget_percent_format">%1$d%% of budget</string>
+    <string name="budget_format">Budget: %1$s</string>
+
+    <!-- Expenses Screen -->
+    <string name="delete_expense_title">Delete Expense</string>
+    <string name="search_expenses">Search expenses\u2026</string>
+    <string name="no_expenses_found">No expenses found</string>
+    <string name="total_label">Total</string>
+
+    <!-- Add Expense Screen -->
+    <string name="edit_expense">Edit Expense</string>
+    <string name="cannot_edit">Cannot Edit</string>
+    <string name="cannot_edit_message">You can only edit expenses that you added</string>
+    <string name="title_required">Title *</string>
+    <string name="title_placeholder">e.g., Tata Sheets for Storage Home</string>
+    <string name="amount_required">Amount (₹) *</string>
+    <string name="date_required">Date *</string>
+    <string name="paid_by_required">Paid By *</string>
+    <string name="payment_mode_required">Payment Mode *</string>
+    <string name="category_required">Category *</string>
+    <string name="select_category">Select Category</string>
+    <string name="sub_category_label">Sub-Category</string>
+    <string name="select_sub_category">Select Sub-Category</string>
+    <string name="stage_required">Construction Stage *</string>
+    <string name="select_stage">Select Stage</string>
+    <string name="vendor_label">Vendor / Paid To (Optional)</string>
+    <string name="vendor_placeholder">e.g., Ramesh Contractor</string>
+    <string name="notes_label">Notes (Optional)</string>
+    <string name="notes_placeholder">Any additional details\u2026</string>
+    <string name="update_expense">Update Expense</string>
+    <string name="save_expense">Save Expense</string>
+
+    <!-- Reports Screen -->
+    <string name="reports_analytics">Reports &amp; Analytics</string>
+    <string name="total_expenditure">Total Expenditure</string>
+    <string name="monthly_trend">Monthly Trend</string>
+    <string name="no_data_available">No data available</string>
+
+    <!-- Settings Screen -->
+    <string name="profile_settings">Profile Settings</string>
+    <string name="sign_out">Sign Out</string>
+    <string name="project_settings">Project Settings</string>
+    <string name="owner_only_settings">Only the project creator can modify these settings</string>
+    <string name="no_project">No Project</string>
+    <string name="total_budget_label">Total Budget (₹)</string>
+    <string name="save_budget">Save Budget</string>
+    <string name="current_construction_stage">Current Construction Stage</string>
+    <string name="danger_zone">Danger Zone</string>
+    <string name="delete_project_warning">Deleting the project will remove all expenses, members, and settings permanently.</string>
+    <string name="delete_project">Delete Project</string>
+    <string name="delete_account">Delete Account</string>
+    <string name="delete_account_warning">This will permanently delete your account and all associated data. You will be signed out and will need to create a new account to use the app again. This action cannot be undone.</string>
+    <string name="warning">Warning</string>
+
+    <!-- Projects Screen -->
+    <string name="my_projects">My Projects</string>
+    <string name="new_project">New Project</string>
+    <string name="no_projects_yet">No projects yet</string>
+    <string name="create_project_hint">Create a new project for projects to appear here</string>
 </resources>

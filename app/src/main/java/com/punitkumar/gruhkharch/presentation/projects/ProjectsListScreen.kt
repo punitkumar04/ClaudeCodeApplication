@@ -16,7 +16,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.punitkumar.gruhkharch.R
 import com.punitkumar.gruhkharch.domain.model.Project
 import com.punitkumar.gruhkharch.presentation.theme.DangerRed
 import com.punitkumar.gruhkharch.presentation.theme.SuccessGreen
@@ -38,7 +40,7 @@ fun ProjectsListScreen(
         AlertDialog(
             onDismissRequest = { projectToDelete = null },
             icon = { Icon(Icons.Filled.Delete, contentDescription = "Delete", tint = MaterialTheme.colorScheme.error) },
-            title = { Text("Delete Project") },
+            title = { Text(stringResource(R.string.delete_project)) },
             text = {
                 Text("Are you sure you want to delete \"${project.name}\"? All expenses in this project will also be deleted. This action cannot be undone.")
             },
@@ -66,7 +68,7 @@ fun ProjectsListScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "My Projects",
+                        text = stringResource(R.string.my_projects),
                         fontWeight = FontWeight.Bold
                     )
                 },
@@ -118,14 +120,14 @@ fun ProjectsListScreen(
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
-                        text = "No projects yet",
+                        text = stringResource(R.string.no_projects_yet),
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Medium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "Create a new project for projects to appear here",
+                        text = stringResource(R.string.create_project_hint),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                     )

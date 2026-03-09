@@ -14,7 +14,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.punitkumar.gruhkharch.R
 import com.punitkumar.gruhkharch.domain.model.Expense
 import com.punitkumar.gruhkharch.presentation.components.ExpenseCard
 import com.punitkumar.gruhkharch.presentation.components.FilterSheet
@@ -42,14 +44,14 @@ fun ExpensesScreen(
                 )
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
-                    text = "No Project Selected",
+                    text = stringResource(R.string.no_project_selected),
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Medium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "Select a project from the Projects tab to view expenses",
+                    text = stringResource(R.string.select_project_expenses),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center
@@ -66,7 +68,7 @@ fun ExpensesScreen(
         AlertDialog(
             onDismissRequest = { expenseToDelete = null },
             icon = { Icon(Icons.Filled.Delete, contentDescription = "Delete", tint = MaterialTheme.colorScheme.error) },
-            title = { Text("Delete Expense") },
+            title = { Text(stringResource(R.string.delete_expense_title)) },
             text = {
                 Text("Are you sure you want to delete \"${expense.title}\" (${CurrencyFormatter.formatIndianCurrency(expense.amount)})?")
             },
@@ -92,7 +94,7 @@ fun ExpensesScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Expenses") },
+                title = { Text(stringResource(R.string.expenses)) },
                 actions = {
                     IconButton(onClick = { viewModel.toggleFilters() }) {
                         Icon(
@@ -116,7 +118,7 @@ fun ExpensesScreen(
             OutlinedTextField(
                 value = state.searchQuery,
                 onValueChange = viewModel::updateSearch,
-                placeholder = { Text("Search expenses...") },
+                placeholder = { Text(stringResource(R.string.search_expenses)) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 8.dp),
@@ -201,7 +203,7 @@ fun ExpensesScreen(
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
-                            "No expenses found",
+                            stringResource(R.string.no_expenses_found),
                             style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )

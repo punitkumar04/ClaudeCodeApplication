@@ -27,4 +27,13 @@ class AuthRepositoryImpl @Inject constructor(
     override fun signOut() {
         authSource.signOut()
     }
+
+    override suspend fun deleteAccount(): Result<Unit> {
+        return try {
+            authSource.deleteAccount()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }

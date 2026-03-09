@@ -14,7 +14,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.punitkumar.gruhkharch.R
 import com.punitkumar.gruhkharch.domain.model.DefaultStages
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -27,6 +29,7 @@ fun SettingsScreen(
     val state by viewModel.state.collectAsState()
     var showStageMenu by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
+    var showDeleteAccountDialog by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(state.message) {
@@ -46,7 +49,7 @@ fun SettingsScreen(
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
             icon = { Icon(Icons.Filled.Warning, contentDescription = "Warning", tint = MaterialTheme.colorScheme.error) },
-            title = { Text("Delete Project") },
+            title = { Text(stringResource(R.string.delete_project)) },
             text = {
                 Text(
                     "This will permanently delete the project \"${state.project?.name}\" and all its data including expenses, members, and settings. This action cannot be undone."
@@ -71,9 +74,36 @@ fun SettingsScreen(
         )
     }
 
+    if (showDeleteAccountDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteAccountDialog = false },
+            icon = { Icon(Icons.Filled.Warning, contentDescription = stringResource(R.string.warning), tint = MaterialTheme.colorScheme.error) },
+            title = { Text(stringResource(R.string.delete_account)) },
+            text = {
+                Text(stringResource(R.string.delete_account_warning))
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showDeleteAccountDialog = false
+                        viewModel.deleteAccount { onSignOut() }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                ) {
+                    Text(stringResource(R.string.delete))
+                }
+            },
+            dismissButton = {
+                OutlinedButton(onClick = { showDeleteAccountDialog = false }) {
+                    Text(stringResource(R.string.cancel))
+                }
+            }
+        )
+    }
+
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("Settings") })
+            TopAppBar(title = { Text(stringResource(R.string.settings)) })
         },
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { padding ->
@@ -87,7 +117,7 @@ fun SettingsScreen(
             // ─── PROFILE SETTINGS ───
             item {
                 Text(
-                    text = "Profile Settings",
+                    text = stringResource(R.string.profile_settings),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.primary
@@ -131,9 +161,22 @@ fun SettingsScreen(
                                 contentColor = MaterialTheme.colorScheme.error
                             )
                         ) {
-                            Icon(Icons.Filled.Logout, contentDescription = "Sign out")
+                            Icon(Icons.Filled.Logout, contentDescription = stringResource(R.string.sign_out))
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Sign Out")
+                            Text(stringResource(R.string.sign_out))
+                        }
+
+                        OutlinedButton(
+                            onClick = { showDeleteAccountDialog = true },
+                            modifier = Modifier.fillMaxWidth(),
+                            enabled = !state.isLoading,
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                contentColor = MaterialTheme.colorScheme.error
+                            )
+                        ) {
+                            Icon(Icons.Filled.PersonRemove, contentDescription = stringResource(R.string.delete_account))
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(stringResource(R.string.delete_account))
                         }
                     }
                 }
@@ -143,14 +186,14 @@ fun SettingsScreen(
             item {
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "Project Settings",
+                    text = stringResource(R.string.project_settings),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.primary
                 )
                 if (!state.isProjectOwner) {
                     Text(
-                        text = "Only the project creator can modify these settings",
+                        text = stringResource(R.string.owner_only_settings),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -168,7 +211,7 @@ fun SettingsScreen(
                             Icon(Icons.Filled.Home, contentDescription = "Project", tint = MaterialTheme.colorScheme.primary)
                             Spacer(modifier = Modifier.width(12.dp))
                             Text(
-                                text = state.project?.name ?: "No Project",
+                                text = state.project?.name ?: stringResource(R.string.no_project),
                                 style = MaterialTheme.typography.bodyLarge,
                                 fontWeight = FontWeight.Medium
                             )
@@ -263,7 +306,7 @@ fun SettingsScreen(
                         OutlinedTextField(
                             value = state.budget,
                             onValueChange = { viewModel.updateBudget(it) },
-                            label = { Text("Total Budget (₹)") },
+                            label = { Text(stringResource(R.string.total_budget_label)) },
                             modifier = Modifier.fillMaxWidth(),
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                             singleLine = true,
@@ -276,7 +319,7 @@ fun SettingsScreen(
                                 onClick = { viewModel.saveBudget() },
                                 modifier = Modifier.align(Alignment.End)
                             ) {
-                                Text("Save Budget")
+                                Text(stringResource(R.string.save_budget))
                             }
                         }
                     }
@@ -286,7 +329,7 @@ fun SettingsScreen(
             // Current Construction Stage
             item {
                 Text(
-                    text = "Current Construction Stage",
+                    text = stringResource(R.string.current_construction_stage),
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Medium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -347,14 +390,14 @@ fun SettingsScreen(
                     ) {
                         Column(modifier = Modifier.padding(16.dp)) {
                             Text(
-                                text = "Danger Zone",
+                                text = stringResource(R.string.danger_zone),
                                 style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.SemiBold,
                                 color = MaterialTheme.colorScheme.error
                             )
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                text = "Deleting the project will remove all expenses, members, and settings permanently.",
+                                text = stringResource(R.string.delete_project_warning),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -377,7 +420,7 @@ fun SettingsScreen(
                                     Icon(Icons.Filled.DeleteForever, contentDescription = "Delete project")
                                 }
                                 Spacer(modifier = Modifier.width(8.dp))
-                                Text("Delete Project")
+                                Text(stringResource(R.string.delete_project))
                             }
                         }
                     }
