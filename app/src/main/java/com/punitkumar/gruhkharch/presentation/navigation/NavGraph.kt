@@ -1,6 +1,7 @@
 package com.punitkumar.gruhkharch.presentation.navigation
 
 import androidx.compose.animation.*
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -17,6 +18,8 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.punitkumar.gruhkharch.domain.CurrentProjectHolder
+import com.punitkumar.gruhkharch.presentation.components.OfflineBanner
+import com.punitkumar.gruhkharch.presentation.components.rememberConnectivityState
 import com.punitkumar.gruhkharch.presentation.addexpense.AddExpenseScreen
 import com.punitkumar.gruhkharch.presentation.auth.AuthScreen
 import com.punitkumar.gruhkharch.presentation.expenses.ExpensesScreen
@@ -62,6 +65,7 @@ fun AppNavGraph(isSignedIn: Boolean, currentProjectHolder: CurrentProjectHolder)
         && currentProjectId != null
         && currentDestination?.route !in fabExcludedRoutes
 
+    val isConnected by rememberConnectivityState()
     val startDestination = if (!isSignedIn) Routes.Auth.route else Routes.ProjectsList.route
 
     Scaffold(
@@ -108,11 +112,14 @@ fun AppNavGraph(isSignedIn: Boolean, currentProjectHolder: CurrentProjectHolder)
             }
         }
     ) { innerPadding ->
-        NavHost(
-            navController = navController,
-            startDestination = startDestination,
-            modifier = Modifier.padding(innerPadding)
-        ) {
+        Column(modifier = Modifier.padding(innerPadding)) {
+            if (showBottomBar) {
+                OfflineBanner(isOffline = !isConnected)
+            }
+            NavHost(
+                navController = navController,
+                startDestination = startDestination
+            ) {
             composable(Routes.Auth.route) {
                 AuthScreen(
                     onSignInSuccess = {
@@ -217,6 +224,7 @@ fun AppNavGraph(isSignedIn: Boolean, currentProjectHolder: CurrentProjectHolder)
                     }
                 )
             }
+        }
         }
     }
 }

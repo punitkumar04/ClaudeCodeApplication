@@ -8,4 +8,5 @@ interface AuthRepository {
     val currentUserId: String?
     suspend fun signInWithGoogle(idToken: String): Result<User>
     fun signOut()
+    suspend fun deleteAccount(): Result<Unit>
 }

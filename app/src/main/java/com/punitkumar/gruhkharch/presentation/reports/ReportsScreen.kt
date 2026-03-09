@@ -21,7 +21,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
+import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.punitkumar.gruhkharch.R
 import com.punitkumar.gruhkharch.presentation.theme.ChartColors
 import com.punitkumar.gruhkharch.util.CurrencyFormatter
 import java.io.File
@@ -47,14 +49,14 @@ fun ReportsScreen(
                 )
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
-                    text = "No Project Selected",
+                    text = stringResource(R.string.no_project_selected),
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Medium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "Select a project from the Projects tab to view reports",
+                    text = stringResource(R.string.select_project_reports),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center
@@ -71,7 +73,7 @@ fun ReportsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Reports & Analytics") },
+                title = { Text(stringResource(R.string.reports_analytics)) },
                 actions = {
                     IconButton(onClick = {
                         exportCsv(context, viewModel.generateCsvContent())
@@ -117,7 +119,7 @@ fun ReportsScreen(
                 ) {
                     Column(modifier = Modifier.padding(20.dp)) {
                         Text(
-                            text = "Total Expenditure",
+                            text = stringResource(R.string.total_expenditure),
                             style = MaterialTheme.typography.titleSmall,
                             color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
                         )
@@ -188,7 +190,7 @@ fun ReportsScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = "No data available",
+                            text = stringResource(R.string.no_data_available),
                             style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -201,7 +203,7 @@ fun ReportsScreen(
                 item {
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "Monthly Trend",
+                        text = stringResource(R.string.monthly_trend),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold
                     )

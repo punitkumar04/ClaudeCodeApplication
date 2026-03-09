@@ -44,6 +44,17 @@ class FirebaseAuthSource @Inject constructor(
         )
     }
 
+    suspend fun deleteAccount() {
+        val user = auth.currentUser ?: throw Exception("No user signed in")
+        user.delete().await()
+        val webClientId = context.getString(R.string.default_web_client_id)
+        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestIdToken(webClientId)
+            .requestEmail()
+            .build()
+        GoogleSignIn.getClient(context, gso).revokeAccess().await()
+    }
+
     fun signOut() {
         auth.signOut()
         val webClientId = context.getString(R.string.default_web_client_id)
