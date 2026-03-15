@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.punitkumar.gruhkharch.R
@@ -29,6 +30,13 @@ fun ExpensesScreen(
     viewModel: ExpensesViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
+    val context = LocalContext.current
+
+    LaunchedEffect(state.error) {
+        state.error?.let {
+            android.widget.Toast.makeText(context, it, android.widget.Toast.LENGTH_SHORT).show()
+        }
+    }
 
     if (!state.hasProject) {
         Box(
@@ -38,7 +46,7 @@ fun ExpensesScreen(
             Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(32.dp)) {
                 Icon(
                     imageVector = Icons.Filled.Folder,
-                    contentDescription = "No project",
+                    contentDescription = stringResource(R.string.cd_no_project),
                     modifier = Modifier.size(72.dp),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
                 )
@@ -67,10 +75,10 @@ fun ExpensesScreen(
     expenseToDelete?.let { expense ->
         AlertDialog(
             onDismissRequest = { expenseToDelete = null },
-            icon = { Icon(Icons.Filled.Delete, contentDescription = "Delete", tint = MaterialTheme.colorScheme.error) },
+            icon = { Icon(Icons.Filled.Delete, contentDescription = stringResource(R.string.delete), tint = MaterialTheme.colorScheme.error) },
             title = { Text(stringResource(R.string.delete_expense_title)) },
             text = {
-                Text("Are you sure you want to delete \"${expense.title}\" (${CurrencyFormatter.formatIndianCurrency(expense.amount)})?")
+                Text(stringResource(R.string.delete_expense_confirm, expense.title, CurrencyFormatter.formatIndianCurrency(expense.amount)))
             },
             confirmButton = {
                 TextButton(
@@ -80,12 +88,12 @@ fun ExpensesScreen(
                     },
                     colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
                 ) {
-                    Text("Delete")
+                    Text(stringResource(R.string.delete))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { expenseToDelete = null }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.cancel))
                 }
             }
         )
@@ -99,7 +107,7 @@ fun ExpensesScreen(
                     IconButton(onClick = { viewModel.toggleFilters() }) {
                         Icon(
                             Icons.Filled.FilterList,
-                            contentDescription = "Filter",
+                            contentDescription = stringResource(R.string.filter_icon),
                             tint = if (state.filter != com.punitkumar.gruhkharch.domain.model.ExpenseFilter())
                                 MaterialTheme.colorScheme.primary
                             else MaterialTheme.colorScheme.onSurface
@@ -127,7 +135,7 @@ fun ExpensesScreen(
                 trailingIcon = {
                     if (state.searchQuery.isNotBlank()) {
                         IconButton(onClick = { viewModel.updateSearch("") }) {
-                            Icon(Icons.Filled.Clear, contentDescription = "Clear")
+                            Icon(Icons.Filled.Clear, contentDescription = stringResource(R.string.clear_icon))
                         }
                     }
                 }
@@ -151,7 +159,7 @@ fun ExpensesScreen(
                 ) {
                     Column {
                         Text(
-                            "Total",
+                            stringResource(R.string.total_label),
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onPrimaryContainer
                         )
@@ -163,7 +171,7 @@ fun ExpensesScreen(
                         )
                     }
                     Text(
-                        "${state.totalCount} expenses",
+                        stringResource(R.string.expense_count_format, state.totalCount),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
@@ -197,7 +205,7 @@ fun ExpensesScreen(
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Icon(
                             Icons.Filled.ReceiptLong,
-                            contentDescription = "No expenses",
+                            contentDescription = stringResource(R.string.no_expenses_icon),
                             modifier = Modifier.size(64.dp),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -299,12 +307,12 @@ private fun SwipeToDismissExpenseCard(
                 ) {
                     Icon(
                         Icons.Filled.Delete,
-                        contentDescription = "Delete",
+                        contentDescription = stringResource(R.string.delete),
                         tint = MaterialTheme.colorScheme.onErrorContainer
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        "Delete",
+                        stringResource(R.string.delete),
                         color = MaterialTheme.colorScheme.onErrorContainer,
                         fontWeight = FontWeight.Medium
                     )

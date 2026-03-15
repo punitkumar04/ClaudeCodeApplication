@@ -46,6 +46,13 @@
     <string name="join_project_button">Join Project</string>
     <string name="back_to_create_project">Back to Create Project</string>
 
+    <!-- Content Descriptions -->
+    <string name="cd_create_project">Create project</string>
+    <string name="cd_add">Add</string>
+    <string name="cd_join">Join</string>
+    <string name="cd_join_project">Join project</string>
+    <string name="cd_back">Back</string>
+
     <!-- Home Screen -->
     <string name="no_project_selected">No Project Selected</string>
     <string name="select_project_dashboard">Select a project from the Projects tab to view your dashboard</string>
@@ -69,6 +76,11 @@
     <string name="search_expenses">Search expenses\u2026</string>
     <string name="no_expenses_found">No expenses found</string>
     <string name="total_label">Total</string>
+    <string name="delete_expense_confirm">Are you sure you want to delete \"%1$s\" (%2$s)?</string>
+    <string name="expense_count_format">%1$d expenses</string>
+    <string name="no_expenses_icon">No expenses</string>
+    <string name="filter_icon">Filter</string>
+    <string name="clear_icon">Clear</string>
 
     <!-- Add Expense Screen -->
     <string name="edit_expense">Edit Expense</string>
@@ -92,6 +104,12 @@
     <string name="notes_placeholder">Any additional details\u2026</string>
     <string name="update_expense">Update Expense</string>
     <string name="save_expense">Save Expense</string>
+    <string name="amount_placeholder">0.00</string>
+    <string name="pick_date">Pick date</string>
+    <string name="ok">OK</string>
+    <string name="select">Select</string>
+    <string name="char_count_format">%1$d/200</string>
+    <string name="save_icon">Save</string>
 
     <!-- Reports Screen -->
     <string name="reports_analytics">Reports &amp; Analytics</string>
@@ -115,9 +133,65 @@
     <string name="delete_account_warning">This will permanently delete your account and all associated data. You will be signed out and will need to create a new account to use the app again. This action cannot be undone.</string>
     <string name="warning">Warning</string>
 
+    <!-- Filter Sheet -->
+    <string name="filters_and_sort">Filters &amp; Sort</string>
+    <string name="clear">Clear</string>
+    <string name="close">Close</string>
+    <string name="sort_by">Sort By</string>
+    <string name="group_by">Group By</string>
+    <string name="categories">Categories</string>
+    <string name="construction_stage">Construction Stage</string>
+    <string name="paid_by">Paid By</string>
+    <string name="payment_mode">Payment Mode</string>
+    <string name="apply_filters">Apply Filters</string>
+
     <!-- Projects Screen -->
     <string name="my_projects">My Projects</string>
     <string name="new_project">New Project</string>
     <string name="no_projects_yet">No projects yet</string>
     <string name="create_project_hint">Create a new project for projects to appear here</string>
+    <string name="delete_project_confirm">Are you sure you want to delete \"%1$s\"? All expenses in this project will also be deleted. This action cannot be undone.</string>
+    <string name="project_count_format">%1$d projects</string>
+    <string name="member_count_format">%1$d members</string>
+    <string name="cd_no_projects">No projects</string>
+    <string name="cd_project">Project</string>
+    <string name="cd_options">Options</string>
+    <string name="cd_open_project">Open project</string>
+    <string name="cd_members">Members</string>
+    <string name="cd_delete">Delete</string>
+
+    <!-- Settings Screen (additional) -->
+    <string name="delete_project_confirm_detail">This will permanently delete the project \"%1$s\" and all its data including expenses, members, and settings. This action cannot be undone.</string>
+    <string name="default_user">User</string>
+    <string name="invite_code_label">Invite Code</string>
+    <string name="members_count_format">Members (%1$d)</string>
+    <string name="cd_profile">Profile</string>
+    <string name="cd_warning">Warning</string>
+    <string name="cd_regenerate">Regenerate</string>
+    <string name="cd_member">Member</string>
+    <string name="cd_delete_project">Delete project</string>
+    <string name="cd_sign_out">Sign out</string>
+
+    <!-- Reports Screen (additional) -->
+    <string name="tab_category">Category</string>
+    <string name="tab_stage">Stage</string>
+    <string name="tab_member">Member</string>
+    <string name="tab_payment">Payment</string>
+    <string name="tab_vendors">Vendors</string>
+    <string name="cd_export_csv">Export CSV</string>
+    <string name="cd_share">Share</string>
+    <string name="remaining_format">Remaining: %1$s</string>
+    <string name="export_filename">construction_khata_expenses.csv</string>
+    <string name="export_expenses">Export Expenses</string>
+    <string name="share_report">Share Report</string>
+    <string name="expenses_report_subject">Construction Khata - Expenses Report</string>
+    <string name="export_failed">Export failed</string>
+    <string name="share_failed">Share failed</string>
+    <string name="cd_no_project">No project</string>
+
+    <!-- Home Screen (additional) -->
+    <string name="cd_view_all">View all</string>
+    <string name="cd_no_expenses">No expenses</string>
+    <string name="cd_expense">Expense</string>
+    <string name="cd_current_stage">Current stage</string>
 </resources>

@@ -9,7 +9,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.punitkumar.gruhkharch.R
 import com.punitkumar.gruhkharch.domain.model.*
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
@@ -45,17 +47,17 @@ fun FilterSheet(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("Filters & Sort", style = MaterialTheme.typography.titleMedium)
+                Text(stringResource(R.string.filters_and_sort), style = MaterialTheme.typography.titleMedium)
                 Row {
-                    TextButton(onClick = onClear) { Text("Clear") }
+                    TextButton(onClick = onClear) { Text(stringResource(R.string.clear)) }
                     IconButton(onClick = onDismiss) {
-                        Icon(Icons.Filled.Close, contentDescription = "Close")
+                        Icon(Icons.Filled.Close, contentDescription = stringResource(R.string.close))
                     }
                 }
             }
 
             // Sort By
-            Text("Sort By", style = MaterialTheme.typography.labelLarge)
+            Text(stringResource(R.string.sort_by), style = MaterialTheme.typography.labelLarge)
             FlowRow(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalArrangement = Arrangement.spacedBy(4.dp)
@@ -70,7 +72,7 @@ fun FilterSheet(
             }
 
             // Group By
-            Text("Group By", style = MaterialTheme.typography.labelLarge)
+            Text(stringResource(R.string.group_by), style = MaterialTheme.typography.labelLarge)
             FlowRow(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalArrangement = Arrangement.spacedBy(4.dp)
@@ -85,7 +87,7 @@ fun FilterSheet(
             }
 
             // Categories
-            Text("Categories", style = MaterialTheme.typography.labelLarge)
+            Text(stringResource(R.string.categories), style = MaterialTheme.typography.labelLarge)
             FlowRow(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalArrangement = Arrangement.spacedBy(4.dp)
@@ -104,7 +106,7 @@ fun FilterSheet(
             }
 
             // Stages
-            Text("Construction Stage", style = MaterialTheme.typography.labelLarge)
+            Text(stringResource(R.string.construction_stage), style = MaterialTheme.typography.labelLarge)
             FlowRow(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalArrangement = Arrangement.spacedBy(4.dp)
@@ -124,7 +126,7 @@ fun FilterSheet(
 
             // Members
             if (members.isNotEmpty()) {
-                Text("Paid By", style = MaterialTheme.typography.labelLarge)
+                Text(stringResource(R.string.paid_by), style = MaterialTheme.typography.labelLarge)
                 FlowRow(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalArrangement = Arrangement.spacedBy(4.dp)
@@ -144,7 +146,7 @@ fun FilterSheet(
             }
 
             // Payment Modes
-            Text("Payment Mode", style = MaterialTheme.typography.labelLarge)
+            Text(stringResource(R.string.payment_mode), style = MaterialTheme.typography.labelLarge)
             FlowRow(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalArrangement = Arrangement.spacedBy(4.dp)
@@ -179,7 +181,7 @@ fun FilterSheet(
                 },
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Apply Filters")
+                Text(stringResource(R.string.apply_filters))
             }
         }
     }

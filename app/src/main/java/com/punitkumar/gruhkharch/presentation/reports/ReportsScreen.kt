@@ -69,8 +69,14 @@ fun ReportsScreen(
     val context = LocalContext.current
     var selectedTab by remember { mutableIntStateOf(0) }
     val tabs = listOf("Category", "Stage", "Member", "Payment", "Vendors")
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(state.error) {
+        state.error?.let { snackbarHostState.showSnackbar(it) }
+    }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.reports_analytics)) },
@@ -303,7 +309,8 @@ private fun exportCsv(context: Context, csvContent: String) {
         }
         context.startActivity(Intent.createChooser(intent, "Export Expenses"))
     } catch (e: Exception) {
-        // Handle error
+        android.util.Log.w("ReportsScreen", "Failed to export CSV", e)
+        android.widget.Toast.makeText(context, "Export failed", android.widget.Toast.LENGTH_SHORT).show()
     }
 }
 
@@ -316,6 +323,7 @@ private fun shareCsv(context: Context, csvContent: String) {
         }
         context.startActivity(Intent.createChooser(intent, "Share Report"))
     } catch (e: Exception) {
-        // Handle error
+        android.util.Log.w("ReportsScreen", "Failed to share report", e)
+        android.widget.Toast.makeText(context, "Share failed", android.widget.Toast.LENGTH_SHORT).show()
     }
 }

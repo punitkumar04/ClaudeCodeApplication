@@ -10,6 +10,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
+import com.punitkumar.gruhkharch.R
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -107,7 +109,7 @@ fun AppNavGraph(isSignedIn: Boolean, currentProjectHolder: CurrentProjectHolder)
                     },
                     containerColor = MaterialTheme.colorScheme.primary
                 ) {
-                    Icon(Icons.Filled.Add, contentDescription = "Add Expense")
+                    Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.add_expense))
                 }
             }
         }
