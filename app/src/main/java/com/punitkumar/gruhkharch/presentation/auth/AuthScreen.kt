@@ -129,7 +129,7 @@ fun AuthScreen(
             Spacer(modifier = Modifier.height(32.dp))
 
             Text(
-                text = "Track every rupee of your\nhouse construction journey",
+                text = stringResource(R.string.track_every_rupee),
                 style = MaterialTheme.typography.bodyMedium,
                 textAlign = TextAlign.Center,
                 color = MaterialTheme.colorScheme.onSurfaceVariant

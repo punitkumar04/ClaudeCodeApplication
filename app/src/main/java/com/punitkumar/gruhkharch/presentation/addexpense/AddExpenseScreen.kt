@@ -48,7 +48,7 @@ fun AddExpenseScreen(
             try {
                 val vibrator = context.getSystemService(Vibrator::class.java)
                 vibrator?.vibrate(VibrationEffect.createOneShot(50, VibrationEffect.DEFAULT_AMPLITUDE))
-            } catch (e: Exception) { /* ignore */ }
+            } catch (e: Exception) { android.util.Log.w("AddExpense", "Vibration failed", e) }
             onExpenseAdded()
         }
     }
@@ -76,7 +76,7 @@ fun AddExpenseScreen(
                 ) {
                     Icon(
                         imageVector = Icons.Filled.Lock,
-                        contentDescription = "Cannot edit",
+                        contentDescription = stringResource(R.string.cannot_edit),
                         modifier = Modifier.size(72.dp),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
                     )
@@ -110,8 +110,8 @@ fun AddExpenseScreen(
             OutlinedTextField(
                 value = state.title,
                 onValueChange = viewModel::updateTitle,
-                label = { Text("Title *") },
-                placeholder = { Text("e.g., Tata Sheets for Storage Home") },
+                label = { Text(stringResource(R.string.title_required)) },
+                placeholder = { Text(stringResource(R.string.title_placeholder)) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 leadingIcon = { Icon(Icons.Filled.Description, contentDescription = null) }
@@ -121,8 +121,8 @@ fun AddExpenseScreen(
             OutlinedTextField(
                 value = state.amount,
                 onValueChange = viewModel::updateAmount,
-                label = { Text("Amount (\u20B9) *") },
-                placeholder = { Text("0.00") },
+                label = { Text(stringResource(R.string.amount_required)) },
+                placeholder = { Text(stringResource(R.string.amount_placeholder)) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
@@ -133,13 +133,13 @@ fun AddExpenseScreen(
             OutlinedTextField(
                 value = com.punitkumar.gruhkharch.util.DateUtils.formatDate(state.date),
                 onValueChange = {},
-                label = { Text("Date *") },
+                label = { Text(stringResource(R.string.date_required)) },
                 modifier = Modifier.fillMaxWidth(),
                 readOnly = true,
                 leadingIcon = { Icon(Icons.Filled.CalendarToday, contentDescription = null) },
                 trailingIcon = {
                     IconButton(onClick = { showDatePicker = true }) {
-                        Icon(Icons.Filled.EditCalendar, contentDescription = "Pick date")
+                        Icon(Icons.Filled.EditCalendar, contentDescription = stringResource(R.string.pick_date))
                     }
                 }
             )
@@ -154,10 +154,10 @@ fun AddExpenseScreen(
                         TextButton(onClick = {
                             datePickerState.selectedDateMillis?.let { viewModel.updateDate(it) }
                             showDatePicker = false
-                        }) { Text("OK") }
+                        }) { Text(stringResource(R.string.ok)) }
                     },
                     dismissButton = {
-                        TextButton(onClick = { showDatePicker = false }) { Text("Cancel") }
+                        TextButton(onClick = { showDatePicker = false }) { Text(stringResource(R.string.cancel)) }
                     }
                 ) {
                     DatePicker(state = datePickerState)
@@ -170,9 +170,9 @@ fun AddExpenseScreen(
                 onExpandedChange = { showPaidByMenu = it }
             ) {
                 OutlinedTextField(
-                    value = state.paidByMember?.name ?: "Select",
+                    value = state.paidByMember?.name ?: stringResource(R.string.select),
                     onValueChange = {},
-                    label = { Text("Paid By *") },
+                    label = { Text(stringResource(R.string.paid_by_required)) },
                     modifier = Modifier.fillMaxWidth().menuAnchor(),
                     readOnly = true,
                     leadingIcon = { Icon(Icons.Filled.Person, contentDescription = null) },
@@ -202,7 +202,7 @@ fun AddExpenseScreen(
                 OutlinedTextField(
                     value = state.paymentMode.displayName,
                     onValueChange = {},
-                    label = { Text("Payment Mode *") },
+                    label = { Text(stringResource(R.string.payment_mode_required)) },
                     modifier = Modifier.fillMaxWidth().menuAnchor(),
                     readOnly = true,
                     leadingIcon = { Icon(Icons.Filled.Payment, contentDescription = null) },
@@ -230,9 +230,9 @@ fun AddExpenseScreen(
                 onExpandedChange = { showCategoryMenu = it }
             ) {
                 OutlinedTextField(
-                    value = state.category.ifBlank { "Select Category" },
+                    value = state.category.ifBlank { stringResource(R.string.select_category) },
                     onValueChange = {},
-                    label = { Text("Category *") },
+                    label = { Text(stringResource(R.string.category_required)) },
                     modifier = Modifier.fillMaxWidth().menuAnchor(),
                     readOnly = true,
                     leadingIcon = { Icon(Icons.Filled.Category, contentDescription = null) },
@@ -261,9 +261,9 @@ fun AddExpenseScreen(
                     onExpandedChange = { showSubCategoryMenu = it }
                 ) {
                     OutlinedTextField(
-                        value = state.subCategory.ifBlank { "Select Sub-Category" },
+                        value = state.subCategory.ifBlank { stringResource(R.string.select_sub_category) },
                         onValueChange = {},
-                        label = { Text("Sub-Category") },
+                        label = { Text(stringResource(R.string.sub_category_label)) },
                         modifier = Modifier.fillMaxWidth().menuAnchor(),
                         readOnly = true,
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = showSubCategoryMenu) }
@@ -291,9 +291,9 @@ fun AddExpenseScreen(
                 onExpandedChange = { showStageMenu = it }
             ) {
                 OutlinedTextField(
-                    value = state.stage.ifBlank { "Select Stage" },
+                    value = state.stage.ifBlank { stringResource(R.string.select_stage) },
                     onValueChange = {},
-                    label = { Text("Construction Stage *") },
+                    label = { Text(stringResource(R.string.stage_required)) },
                     modifier = Modifier.fillMaxWidth().menuAnchor(),
                     readOnly = true,
                     leadingIcon = { Icon(Icons.Filled.Engineering, contentDescription = null) },
@@ -319,8 +319,8 @@ fun AddExpenseScreen(
             OutlinedTextField(
                 value = state.vendor,
                 onValueChange = viewModel::updateVendor,
-                label = { Text("Vendor / Paid To (Optional)") },
-                placeholder = { Text("e.g., Ramesh Contractor") },
+                label = { Text(stringResource(R.string.vendor_label)) },
+                placeholder = { Text(stringResource(R.string.vendor_placeholder)) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 leadingIcon = { Icon(Icons.Filled.Store, contentDescription = null) }
@@ -330,14 +330,14 @@ fun AddExpenseScreen(
             OutlinedTextField(
                 value = state.notes,
                 onValueChange = viewModel::updateNotes,
-                label = { Text("Notes (Optional)") },
-                placeholder = { Text("Any additional details...") },
+                label = { Text(stringResource(R.string.notes_label)) },
+                placeholder = { Text(stringResource(R.string.notes_placeholder)) },
                 modifier = Modifier.fillMaxWidth(),
                 minLines = 2,
                 maxLines = 4,
                 leadingIcon = { Icon(Icons.Filled.Notes, contentDescription = null) },
                 supportingText = {
-                    Text("${state.notes.length}/200")
+                    Text(stringResource(R.string.char_count_format, state.notes.length))
                 }
             )
 
@@ -367,7 +367,7 @@ fun AddExpenseScreen(
                         color = MaterialTheme.colorScheme.onPrimary
                     )
                 } else {
-                    Icon(Icons.Filled.Save, contentDescription = "Save")
+                    Icon(Icons.Filled.Save, contentDescription = stringResource(R.string.save_icon))
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         if (state.isEditing) stringResource(R.string.update_expense) else stringResource(R.string.save_expense),

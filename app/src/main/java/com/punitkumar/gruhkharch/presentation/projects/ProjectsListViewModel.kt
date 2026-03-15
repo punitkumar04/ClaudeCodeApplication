@@ -20,7 +20,8 @@ data class ProjectWithTotal(
 data class ProjectsListState(
     val projects: List<ProjectWithTotal> = emptyList(),
     val isLoading: Boolean = true,
-    val currentUserId: String = ""
+    val currentUserId: String = "",
+    val error: String? = null
 )
 
 @HiltViewModel
@@ -40,8 +41,11 @@ class ProjectsListViewModel @Inject constructor(
 
     private fun loadProjects() {
         viewModelScope.launch {
-            val userId = authRepository.currentUserId ?: return@launch
-            _state.update { it.copy(currentUserId = userId) }
+            val userId = authRepository.currentUserId ?: run {
+                _state.update { it.copy(isLoading = false, error = "Not signed in") }
+                return@launch
+            }
+            _state.update { it.copy(currentUserId = userId, error = null) }
             val projects = projectRepository.getProjectsForUser(userId)
 
             if (projects.isEmpty()) {

@@ -8,9 +8,11 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.punitkumar.gruhkharch.R
 
 @Composable
 fun CreateProjectScreen(
@@ -40,7 +42,7 @@ fun CreateProjectScreen(
         ) {
             Icon(
                 imageVector = Icons.Filled.Construction,
-                contentDescription = "Create project",
+                contentDescription = stringResource(R.string.cd_create_project),
                 modifier = Modifier.size(64.dp),
                 tint = MaterialTheme.colorScheme.primary
             )
@@ -48,7 +50,7 @@ fun CreateProjectScreen(
             Spacer(modifier = Modifier.height(24.dp))
 
             Text(
-                text = "Create Your Project",
+                text = stringResource(R.string.create_your_project),
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold
             )
@@ -56,7 +58,7 @@ fun CreateProjectScreen(
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = "Start tracking your house construction expenses",
+                text = stringResource(R.string.start_tracking_expenses),
                 style = MaterialTheme.typography.bodyMedium,
                 textAlign = TextAlign.Center,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -67,8 +69,8 @@ fun CreateProjectScreen(
             OutlinedTextField(
                 value = projectName,
                 onValueChange = { projectName = it },
-                label = { Text("Project Name") },
-                placeholder = { Text("e.g., Punit's House Construction") },
+                label = { Text(stringResource(R.string.project_name_label)) },
+                placeholder = { Text(stringResource(R.string.project_name_placeholder)) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 leadingIcon = { Icon(Icons.Filled.Home, contentDescription = null) }
@@ -94,9 +96,9 @@ fun CreateProjectScreen(
                         color = MaterialTheme.colorScheme.onPrimary
                     )
                 } else {
-                    Icon(Icons.Filled.Add, contentDescription = "Add")
+                    Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.cd_add))
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Create Project", style = MaterialTheme.typography.titleMedium)
+                    Text(stringResource(R.string.create_project_button), style = MaterialTheme.typography.titleMedium)
                 }
             }
 
@@ -116,7 +118,7 @@ fun CreateProjectScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             Text(
-                text = "Already have a project?",
+                text = stringResource(R.string.already_have_project),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -128,9 +130,9 @@ fun CreateProjectScreen(
                 modifier = Modifier.fillMaxWidth().height(48.dp),
                 shape = MaterialTheme.shapes.medium
             ) {
-                Icon(Icons.Filled.GroupAdd, contentDescription = "Join")
+                Icon(Icons.Filled.GroupAdd, contentDescription = stringResource(R.string.cd_join))
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Join with Invite Code")
+                Text(stringResource(R.string.join_with_invite_code))
             }
         }
     }
@@ -164,7 +166,7 @@ fun JoinProjectScreen(
         ) {
             Icon(
                 imageVector = Icons.Filled.GroupAdd,
-                contentDescription = "Join project",
+                contentDescription = stringResource(R.string.cd_join_project),
                 modifier = Modifier.size(64.dp),
                 tint = MaterialTheme.colorScheme.primary
             )
@@ -172,7 +174,7 @@ fun JoinProjectScreen(
             Spacer(modifier = Modifier.height(24.dp))
 
             Text(
-                text = "Join a Project",
+                text = stringResource(R.string.join_a_project),
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold
             )
@@ -180,7 +182,7 @@ fun JoinProjectScreen(
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = "Enter the invite code shared by your family member",
+                text = stringResource(R.string.enter_invite_code_hint),
                 style = MaterialTheme.typography.bodyMedium,
                 textAlign = TextAlign.Center,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -191,8 +193,8 @@ fun JoinProjectScreen(
             OutlinedTextField(
                 value = inviteCode,
                 onValueChange = { inviteCode = it.uppercase().take(6) },
-                label = { Text("Invite Code") },
-                placeholder = { Text("ABC123") },
+                label = { Text(stringResource(R.string.invite_code)) },
+                placeholder = { Text(stringResource(R.string.invite_code_placeholder)) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 leadingIcon = { Icon(Icons.Filled.VpnKey, contentDescription = null) }
@@ -218,7 +220,7 @@ fun JoinProjectScreen(
                         color = MaterialTheme.colorScheme.onPrimary
                     )
                 } else {
-                    Text("Join Project", style = MaterialTheme.typography.titleMedium)
+                    Text(stringResource(R.string.join_project_button), style = MaterialTheme.typography.titleMedium)
                 }
             }
 
@@ -234,9 +236,9 @@ fun JoinProjectScreen(
             Spacer(modifier = Modifier.height(24.dp))
 
             TextButton(onClick = onBack) {
-                Icon(Icons.Filled.ArrowBack, contentDescription = "Back", modifier = Modifier.size(18.dp))
+                Icon(Icons.Filled.ArrowBack, contentDescription = stringResource(R.string.cd_back), modifier = Modifier.size(18.dp))
                 Spacer(modifier = Modifier.width(4.dp))
-                Text("Back to Create Project")
+                Text(stringResource(R.string.back_to_create_project))
             }
         }
     }
