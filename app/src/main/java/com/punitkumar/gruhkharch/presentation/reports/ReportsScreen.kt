@@ -43,7 +43,7 @@ fun ReportsScreen(
             Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(32.dp)) {
                 Icon(
                     imageVector = Icons.Filled.Folder,
-                    contentDescription = "No project",
+                    contentDescription = stringResource(R.string.cd_no_project),
                     modifier = Modifier.size(72.dp),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
                 )
@@ -68,7 +68,13 @@ fun ReportsScreen(
 
     val context = LocalContext.current
     var selectedTab by remember { mutableIntStateOf(0) }
-    val tabs = listOf("Category", "Stage", "Member", "Payment", "Vendors")
+    val tabs = listOf(
+        stringResource(R.string.tab_category),
+        stringResource(R.string.tab_stage),
+        stringResource(R.string.tab_member),
+        stringResource(R.string.tab_payment),
+        stringResource(R.string.tab_vendors)
+    )
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(state.error) {
@@ -84,12 +90,12 @@ fun ReportsScreen(
                     IconButton(onClick = {
                         exportCsv(context, viewModel.generateCsvContent())
                     }) {
-                        Icon(Icons.Filled.FileDownload, contentDescription = "Export CSV")
+                        Icon(Icons.Filled.FileDownload, contentDescription = stringResource(R.string.cd_export_csv))
                     }
                     IconButton(onClick = {
                         shareCsv(context, viewModel.generateCsvContent())
                     }) {
-                        Icon(Icons.Filled.Share, contentDescription = "Share")
+                        Icon(Icons.Filled.Share, contentDescription = stringResource(R.string.cd_share))
                     }
                 }
             )
@@ -139,7 +145,7 @@ fun ReportsScreen(
                             Spacer(modifier = Modifier.height(8.dp))
                             val remaining = state.budget - state.totalSpent
                             Text(
-                                text = "Remaining: ${CurrencyFormatter.formatIndianCurrency(remaining)}",
+                                text = stringResource(R.string.remaining_format, CurrencyFormatter.formatIndianCurrency(remaining)),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = if (remaining >= 0) MaterialTheme.colorScheme.onPrimaryContainer
                                 else MaterialTheme.colorScheme.error
@@ -299,7 +305,7 @@ private fun ReportRow(label: String, amount: Double, total: Double, color: Color
 
 private fun exportCsv(context: Context, csvContent: String) {
     try {
-        val file = File(context.cacheDir, "construction_khata_expenses.csv")
+        val file = File(context.cacheDir, context.getString(R.string.export_filename))
         file.writeText(csvContent)
         val uri = FileProvider.getUriForFile(context, "${context.packageName}.provider", file)
         val intent = Intent(Intent.ACTION_SEND).apply {
@@ -307,10 +313,10 @@ private fun exportCsv(context: Context, csvContent: String) {
             putExtra(Intent.EXTRA_STREAM, uri)
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
-        context.startActivity(Intent.createChooser(intent, "Export Expenses"))
+        context.startActivity(Intent.createChooser(intent, context.getString(R.string.export_expenses)))
     } catch (e: Exception) {
         android.util.Log.w("ReportsScreen", "Failed to export CSV", e)
-        android.widget.Toast.makeText(context, "Export failed", android.widget.Toast.LENGTH_SHORT).show()
+        android.widget.Toast.makeText(context, context.getString(R.string.export_failed), android.widget.Toast.LENGTH_SHORT).show()
     }
 }
 
@@ -318,12 +324,12 @@ private fun shareCsv(context: Context, csvContent: String) {
     try {
         val intent = Intent(Intent.ACTION_SEND).apply {
             type = "text/plain"
-            putExtra(Intent.EXTRA_SUBJECT, "Construction Khata - Expenses Report")
+            putExtra(Intent.EXTRA_SUBJECT, context.getString(R.string.expenses_report_subject))
             putExtra(Intent.EXTRA_TEXT, csvContent)
         }
-        context.startActivity(Intent.createChooser(intent, "Share Report"))
+        context.startActivity(Intent.createChooser(intent, context.getString(R.string.share_report)))
     } catch (e: Exception) {
         android.util.Log.w("ReportsScreen", "Failed to share report", e)
-        android.widget.Toast.makeText(context, "Share failed", android.widget.Toast.LENGTH_SHORT).show()
+        android.widget.Toast.makeText(context, context.getString(R.string.share_failed), android.widget.Toast.LENGTH_SHORT).show()
     }
 }

@@ -48,12 +48,10 @@ fun SettingsScreen(
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
-            icon = { Icon(Icons.Filled.Warning, contentDescription = "Warning", tint = MaterialTheme.colorScheme.error) },
+            icon = { Icon(Icons.Filled.Warning, contentDescription = stringResource(R.string.warning), tint = MaterialTheme.colorScheme.error) },
             title = { Text(stringResource(R.string.delete_project)) },
             text = {
-                Text(
-                    "This will permanently delete the project \"${state.project?.name}\" and all its data including expenses, members, and settings. This action cannot be undone."
-                )
+                Text(stringResource(R.string.delete_project_confirm_detail, state.project?.name ?: ""))
             },
             confirmButton = {
                 Button(
@@ -63,12 +61,12 @@ fun SettingsScreen(
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
                 ) {
-                    Text("Delete")
+                    Text(stringResource(R.string.delete))
                 }
             },
             dismissButton = {
                 OutlinedButton(onClick = { showDeleteDialog = false }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.cancel))
                 }
             }
         )
@@ -130,11 +128,11 @@ fun SettingsScreen(
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Filled.Person, contentDescription = "Profile", tint = MaterialTheme.colorScheme.primary)
+                            Icon(Icons.Filled.Person, contentDescription = stringResource(R.string.cd_profile), tint = MaterialTheme.colorScheme.primary)
                             Spacer(modifier = Modifier.width(12.dp))
                             Column {
                                 Text(
-                                    text = state.userName.ifEmpty { "User" },
+                                    text = state.userName.ifEmpty { stringResource(R.string.default_user) },
                                     style = MaterialTheme.typography.bodyLarge,
                                     fontWeight = FontWeight.Medium
                                 )
@@ -208,7 +206,7 @@ fun SettingsScreen(
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Filled.Home, contentDescription = "Project", tint = MaterialTheme.colorScheme.primary)
+                            Icon(Icons.Filled.Home, contentDescription = stringResource(R.string.cd_project), tint = MaterialTheme.colorScheme.primary)
                             Spacer(modifier = Modifier.width(12.dp))
                             Text(
                                 text = state.project?.name ?: stringResource(R.string.no_project),
@@ -231,7 +229,7 @@ fun SettingsScreen(
                         ) {
                             Column {
                                 Text(
-                                    text = "Invite Code",
+                                    text = stringResource(R.string.invite_code_label),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -244,7 +242,7 @@ fun SettingsScreen(
                             }
                             if (state.isProjectOwner) {
                                 IconButton(onClick = { viewModel.regenerateInviteCode() }) {
-                                    Icon(Icons.Filled.Refresh, contentDescription = "Regenerate")
+                                    Icon(Icons.Filled.Refresh, contentDescription = stringResource(R.string.cd_regenerate))
                                 }
                             }
                         }
@@ -255,7 +253,7 @@ fun SettingsScreen(
             // Members
             item {
                 Text(
-                    text = "Members (${state.members.size})",
+                    text = stringResource(R.string.members_count_format, state.members.size),
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Medium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -271,7 +269,7 @@ fun SettingsScreen(
                     ) {
                         Icon(
                             Icons.Filled.Person,
-                            contentDescription = "Member",
+                            contentDescription = stringResource(R.string.cd_member),
                             tint = MaterialTheme.colorScheme.primary
                         )
                         Spacer(modifier = Modifier.width(12.dp))
@@ -294,7 +292,7 @@ fun SettingsScreen(
             // Budget
             item {
                 Text(
-                    text = "Budget",
+                    text = stringResource(R.string.budget),
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Medium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -417,7 +415,7 @@ fun SettingsScreen(
                                         color = MaterialTheme.colorScheme.error
                                     )
                                 } else {
-                                    Icon(Icons.Filled.DeleteForever, contentDescription = "Delete project")
+                                    Icon(Icons.Filled.DeleteForever, contentDescription = stringResource(R.string.cd_delete_project))
                                 }
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(stringResource(R.string.delete_project))

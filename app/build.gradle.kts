@@ -102,7 +102,7 @@ dependencies {
     implementation(libs.firebase.auth)
     implementation(libs.firebase.firestore)
     implementation(libs.firebase.storage)
-    implementation(libs.firebase.messaging)
+
 
     // Google Sign In
     implementation(libs.google.auth)
@@ -126,6 +126,4 @@ dependencies {
     // Serialization
     implementation(libs.kotlinx.serialization.json)
 
-    // Accompanist
-    implementation(libs.accompanist.permissions)
 }
