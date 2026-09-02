@@ -82,6 +82,7 @@
     <string name="clear_icon">Clear</string>
 
     <!-- Add Expense Screen -->
+    <string name="duplicate_expense">Duplicate</string>
     <string name="edit_expense">Edit Expense</string>
     <string name="cannot_edit">Cannot Edit</string>
     <string name="cannot_edit_message">You can only edit expenses that you added</string>

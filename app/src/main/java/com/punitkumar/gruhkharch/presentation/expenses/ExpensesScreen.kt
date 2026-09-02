@@ -27,6 +27,7 @@ import com.punitkumar.gruhkharch.util.CurrencyFormatter
 @Composable
 fun ExpensesScreen(
     onExpenseClick: (String) -> Unit,
+    onDuplicateExpense: (String) -> Unit = {},
     viewModel: ExpensesViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
@@ -254,17 +255,53 @@ fun ExpensesScreen(
                             key = { it.id }
                         ) { expense ->
                             val canDelete = viewModel.canDeleteExpense(expense)
-                            if (canDelete) {
-                                SwipeToDismissExpenseCard(
-                                    expense = expense,
-                                    onClick = { onExpenseClick(expense.id) },
-                                    onDelete = { expenseToDelete = expense }
-                                )
-                            } else {
-                                ExpenseCard(
-                                    expense = expense,
-                                    onClick = { onExpenseClick(expense.id) }
-                                )
+                            var showMenu by remember { mutableStateOf(false) }
+                            Box {
+                                if (canDelete) {
+                                    SwipeToDismissExpenseCard(
+                                        expense = expense,
+                                        onClick = { onExpenseClick(expense.id) },
+                                        onLongClick = { showMenu = true },
+                                        onDelete = { expenseToDelete = expense }
+                                    )
+                                } else {
+                                    ExpenseCard(
+                                        expense = expense,
+                                        onClick = { onExpenseClick(expense.id) },
+                                        onLongClick = { showMenu = true }
+                                    )
+                                }
+                                DropdownMenu(
+                                    expanded = showMenu,
+                                    onDismissRequest = { showMenu = false }
+                                ) {
+                                    DropdownMenuItem(
+                                        text = { Text(stringResource(R.string.edit)) },
+                                        onClick = {
+                                            showMenu = false
+                                            onExpenseClick(expense.id)
+                                        },
+                                        leadingIcon = { Icon(Icons.Filled.Edit, contentDescription = null) }
+                                    )
+                                    DropdownMenuItem(
+                                        text = { Text(stringResource(R.string.duplicate_expense)) },
+                                        onClick = {
+                                            showMenu = false
+                                            onDuplicateExpense(expense.id)
+                                        },
+                                        leadingIcon = { Icon(Icons.Filled.ContentCopy, contentDescription = null) }
+                                    )
+                                    if (canDelete) {
+                                        DropdownMenuItem(
+                                            text = { Text(stringResource(R.string.delete), color = MaterialTheme.colorScheme.error) },
+                                            onClick = {
+                                                showMenu = false
+                                                expenseToDelete = expense
+                                            },
+                                            leadingIcon = { Icon(Icons.Filled.Delete, contentDescription = null, tint = MaterialTheme.colorScheme.error) }
+                                        )
+                                    }
+                                }
                             }
                         }
                     }
@@ -279,6 +316,7 @@ fun ExpensesScreen(
 private fun SwipeToDismissExpenseCard(
     expense: Expense,
     onClick: () -> Unit,
+    onLongClick: () -> Unit = {},
     onDelete: () -> Unit
 ) {
     val dismissState = rememberSwipeToDismissBoxState(
@@ -324,7 +362,8 @@ private fun SwipeToDismissExpenseCard(
     ) {
         ExpenseCard(
             expense = expense,
-            onClick = onClick
+            onClick = onClick,
+            onLongClick = onLongClick
         )
     }
 }

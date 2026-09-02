@@ -117,6 +117,31 @@ class AddExpenseViewModel @Inject constructor(
         }
     }
 
+    fun loadExpenseAsDuplicate(expenseId: String) {
+        viewModelScope.launch {
+            val expense = expenseRepository.getExpenseById(expenseId) ?: return@launch
+            val category = DefaultCategories.all.find { it.name == expense.category }
+            _state.update {
+                it.copy(
+                    title = expense.title,
+                    amount = expense.amount.toString(),
+                    date = System.currentTimeMillis(),
+                    paidByMember = expense.paidBy,
+                    paymentMode = expense.paymentMode,
+                    category = expense.category,
+                    subCategory = expense.subCategory ?: "",
+                    stage = expense.stage,
+                    vendor = expense.vendor ?: "",
+                    notes = expense.notes ?: "",
+                    subCategories = category?.subCategories ?: emptyList(),
+                    isEditing = false,
+                    canEdit = true
+                )
+            }
+            projectId = expense.projectId
+        }
+    }
+
     fun updateTitle(title: String) { _state.update { it.copy(title = title, error = null) } }
     fun updateAmount(amount: String) { _state.update { it.copy(amount = amount, error = null) } }
     fun updateDate(date: Long) { _state.update { it.copy(date = date) } }

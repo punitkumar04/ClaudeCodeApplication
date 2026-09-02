@@ -1,6 +1,7 @@
 package com.punitkumar.gruhkharch.presentation.components
 
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronRight
@@ -15,16 +16,21 @@ import com.punitkumar.gruhkharch.domain.model.Expense
 import com.punitkumar.gruhkharch.util.CurrencyFormatter
 import com.punitkumar.gruhkharch.util.DateUtils
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ExpenseCard(
     expense: Expense,
     onClick: () -> Unit,
+    onLongClick: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .clickable { onClick() },
+            .combinedClickable(
+                onClick = onClick,
+                onLongClick = onLongClick
+            ),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Row(
