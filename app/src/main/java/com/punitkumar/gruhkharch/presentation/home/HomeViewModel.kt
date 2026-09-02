@@ -10,6 +10,7 @@ import com.punitkumar.gruhkharch.domain.repository.ProjectRepository
 import com.punitkumar.gruhkharch.util.DateUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -77,66 +78,64 @@ class HomeViewModel @Inject constructor(
             )
         }
 
-        // Observe total spent
-        viewModelScope.launch {
-            expenseRepository.getTotalSpent(project.id).collect { total ->
-                _state.update { it.copy(totalSpent = total) }
-            }
-        }
-
-        // Observe this month spending
         val now = System.currentTimeMillis()
         val monthStart = DateUtils.getStartOfMonth(now)
         val monthEnd = DateUtils.getEndOfMonth(now)
-        viewModelScope.launch {
-            expenseRepository.getTotalInDateRange(project.id, monthStart, monthEnd).collect { total ->
-                _state.update { it.copy(thisMonthSpent = total) }
-            }
-        }
-
-        // Last month
         val lastMonthEnd = monthStart - 1
         val lastMonthStart = DateUtils.getStartOfMonth(lastMonthEnd)
-        viewModelScope.launch {
-            expenseRepository.getTotalInDateRange(project.id, lastMonthStart, lastMonthEnd).collect { total ->
-                _state.update { it.copy(lastMonthSpent = total) }
+
+        coroutineScope {
+            launch {
+                expenseRepository.getTotalSpent(project.id).collect { total ->
+                    _state.update { it.copy(totalSpent = total) }
+                }
             }
-        }
 
-        // Recent expenses
-        viewModelScope.launch {
-            expenseRepository.getRecentExpenses(project.id, 10).collect { expenses ->
-                _state.update { it.copy(recentExpenses = expenses, isLoading = false) }
+            launch {
+                expenseRepository.getTotalInDateRange(project.id, monthStart, monthEnd).collect { total ->
+                    _state.update { it.copy(thisMonthSpent = total) }
+                }
             }
-        }
 
-        // Category breakdown
-        viewModelScope.launch {
-            expenseRepository.getExpenses(project.id).collect { expenses ->
-                val categoryMap = expenses.groupBy { it.category }
-                    .mapValues { (_, exps) -> exps.sumOf { it.amount } }
-                    .toList()
-                    .sortedByDescending { it.second }
-                    .toMap()
+            launch {
+                expenseRepository.getTotalInDateRange(project.id, lastMonthStart, lastMonthEnd).collect { total ->
+                    _state.update { it.copy(lastMonthSpent = total) }
+                }
+            }
 
-                val stageMap = expenses.groupBy { it.stage }
-                    .mapValues { (_, exps) -> exps.sumOf { it.amount } }
-                    .toList()
-                    .sortedByDescending { it.second }
-                    .toMap()
+            launch {
+                expenseRepository.getRecentExpenses(project.id, 10).collect { expenses ->
+                    _state.update { it.copy(recentExpenses = expenses, isLoading = false) }
+                }
+            }
 
-                val memberMap = expenses.groupBy { it.paidBy.name }
-                    .mapValues { (_, exps) -> exps.sumOf { it.amount } }
-                    .toList()
-                    .sortedByDescending { it.second }
-                    .toMap()
+            launch {
+                expenseRepository.getExpenses(project.id).collect { expenses ->
+                    val categoryMap = expenses.groupBy { it.category }
+                        .mapValues { (_, exps) -> exps.sumOf { it.amount } }
+                        .toList()
+                        .sortedByDescending { it.second }
+                        .toMap()
 
-                _state.update {
-                    it.copy(
-                        categoryBreakdown = categoryMap,
-                        stageBreakdown = stageMap,
-                        memberBreakdown = memberMap
-                    )
+                    val stageMap = expenses.groupBy { it.stage }
+                        .mapValues { (_, exps) -> exps.sumOf { it.amount } }
+                        .toList()
+                        .sortedByDescending { it.second }
+                        .toMap()
+
+                    val memberMap = expenses.groupBy { it.paidBy.name }
+                        .mapValues { (_, exps) -> exps.sumOf { it.amount } }
+                        .toList()
+                        .sortedByDescending { it.second }
+                        .toMap()
+
+                    _state.update {
+                        it.copy(
+                            categoryBreakdown = categoryMap,
+                            stageBreakdown = stageMap,
+                            memberBreakdown = memberMap
+                        )
+                    }
                 }
             }
         }

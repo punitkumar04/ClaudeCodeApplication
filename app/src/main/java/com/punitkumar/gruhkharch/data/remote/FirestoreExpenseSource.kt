@@ -43,7 +43,7 @@ class FirestoreExpenseSource @Inject constructor(
             .orderBy("date", Query.Direction.DESCENDING)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
-                    close(error)
+                    android.util.Log.w("FirestoreExpense", "Snapshot listener error", error)
                     return@addSnapshotListener
                 }
                 val expenses = snapshot?.documents?.map { doc ->
