@@ -99,8 +99,9 @@ object DefaultCategories {
         name = "Ceremonies & Rituals",
         emoji = "🙏",
         subCategories = listOf(
-            "Bhoomi Puja / Stone Laying Ceremony", "Foundation Ceremony",
-            "Griha Pravesh / Housewarming", "Vastu Puja",
+            "Bhoomi Puja / Stone Laying Ceremony", "Slab Puja",
+            "Foundation Ceremony", "Griha Pravesh / Housewarming",
+            "Vastu Puja", "Food Expense",
             "Other Religious Ceremonies"
         )
     )

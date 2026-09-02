@@ -1,7 +1,7 @@
 package com.punitkumar.gruhkharch.domain.model
 
 enum class PaymentMode(val displayName: String) {
-    UPI("UPI (GPay/PhonePe/PayTM)"),
+    UPI("UPI"),
     BANK_TRANSFER("Bank Transfer (NEFT/IMPS)"),
     CASH("Cash"),
     CHEQUE("Cheque"),

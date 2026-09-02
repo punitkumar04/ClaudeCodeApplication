@@ -190,12 +190,18 @@ fun AppNavGraph(isSignedIn: Boolean, currentProjectHolder: CurrentProjectHolder)
                         type = NavType.StringType
                         nullable = true
                         defaultValue = null
+                    },
+                    navArgument("duplicate") {
+                        type = NavType.BoolType
+                        defaultValue = false
                     }
                 )
             ) { backStackEntry ->
                 val expenseId = backStackEntry.arguments?.getString("expenseId")
+                val isDuplicate = backStackEntry.arguments?.getBoolean("duplicate") ?: false
                 AddExpenseScreen(
                     expenseId = expenseId,
+                    isDuplicate = isDuplicate,
                     onExpenseAdded = { navController.popBackStack() }
                 )
             }
@@ -204,6 +210,9 @@ fun AppNavGraph(isSignedIn: Boolean, currentProjectHolder: CurrentProjectHolder)
                 ExpensesScreen(
                     onExpenseClick = { expenseId ->
                         navController.navigate(Routes.AddExpense.createRoute(expenseId))
+                    },
+                    onDuplicateExpense = { expenseId ->
+                        navController.navigate(Routes.AddExpense.createRoute(expenseId, duplicate = true))
                     }
                 )
             }

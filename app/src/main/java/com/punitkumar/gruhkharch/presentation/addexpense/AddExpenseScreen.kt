@@ -25,6 +25,7 @@ import com.punitkumar.gruhkharch.domain.model.*
 @Composable
 fun AddExpenseScreen(
     expenseId: String? = null,
+    isDuplicate: Boolean = false,
     onExpenseAdded: () -> Unit,
     viewModel: AddExpenseViewModel = hiltViewModel()
 ) {
@@ -39,8 +40,11 @@ fun AddExpenseScreen(
     var showSubCategoryMenu by remember { mutableStateOf(false) }
     var showStageMenu by remember { mutableStateOf(false) }
 
-    LaunchedEffect(expenseId) {
-        expenseId?.let { viewModel.loadExpense(it) }
+    LaunchedEffect(expenseId, isDuplicate) {
+        expenseId?.let {
+            if (isDuplicate) viewModel.loadExpenseAsDuplicate(it)
+            else viewModel.loadExpense(it)
+        }
     }
 
     LaunchedEffect(state.isSaved) {
