@@ -44,6 +44,7 @@ class ExpensesViewModel @Inject constructor(
 
     private var projectId: String = ""
     private var dataJob: Job? = null
+    private var observeJob: Job? = null
 
     init {
         observeProjectChanges()
@@ -80,7 +81,8 @@ class ExpensesViewModel @Inject constructor(
     }
 
     private fun observeExpenses() {
-        viewModelScope.launch {
+        observeJob?.cancel()
+        observeJob = viewModelScope.launch {
             getExpensesUseCase(projectId, _state.value.filter).collect { expenses ->
                 val grouped = groupExpenses(expenses, _state.value.filter.groupBy)
                 val groupTotals = grouped.mapValues { (_, list) -> list.sumOf { it.amount } }

@@ -118,11 +118,13 @@ class ReportsViewModel @Inject constructor(
         sb.appendLine("Title,Amount,Date,Paid By,Payment Mode,Category,Sub-Category,Stage,Vendor,Notes,Tags")
         expenses.forEach { e ->
             sb.appendLine(
-                "\"${e.title}\",${e.amount},\"${DateUtils.formatDate(e.date)}\",\"${e.paidBy.name}\"," +
-                "\"${e.paymentMode.displayName}\",\"${e.category}\",\"${e.subCategory ?: ""}\",\"${e.stage}\"," +
-                "\"${e.vendor ?: ""}\",\"${e.notes ?: ""}\",\"${e.tags.joinToString(";")}\""
+                "${csvEscape(e.title)},${e.amount},${csvEscape(DateUtils.formatDate(e.date))},${csvEscape(e.paidBy.name)}," +
+                "${csvEscape(e.paymentMode.displayName)},${csvEscape(e.category)},${csvEscape(e.subCategory ?: "")},${csvEscape(e.stage)}," +
+                "${csvEscape(e.vendor ?: "")},${csvEscape(e.notes ?: "")},${csvEscape(e.tags.joinToString(";"))}"
             )
         }
         return sb.toString()
     }
+
+    private fun csvEscape(value: String): String = "\"${value.replace("\"", "\"\"")}\""
 }

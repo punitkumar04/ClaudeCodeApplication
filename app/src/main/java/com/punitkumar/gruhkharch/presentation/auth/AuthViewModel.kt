@@ -88,6 +88,10 @@ class AuthViewModel @Inject constructor(
         _authState.value = AuthState.Error(message)
     }
 
+    fun resetAuthState() {
+        _authState.value = AuthState.Idle
+    }
+
     fun signOut() {
         authRepository.signOut()
         _isSignedIn.value = false

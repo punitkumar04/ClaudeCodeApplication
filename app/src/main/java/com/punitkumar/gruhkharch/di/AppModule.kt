@@ -26,13 +26,7 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideFirestore(): FirebaseFirestore {
-        val firestore = FirebaseFirestore.getInstance()
-        firestore.firestoreSettings = com.google.firebase.firestore.FirebaseFirestoreSettings.Builder()
-            .setPersistenceEnabled(true)
-            .build()
-        return firestore
-    }
+    fun provideFirestore(): FirebaseFirestore = FirebaseFirestore.getInstance()
 
     @Provides
     @Singleton
@@ -45,7 +39,7 @@ object AppModule {
             context,
             GruhKharchDatabase::class.java,
             Constants.DB_NAME
-        ).build()
+        ).fallbackToDestructiveMigration().build()
     }
 
     @Provides

@@ -1,78 +1,63 @@
 package com.punitkumar.gruhkharch.util
 
-import java.text.SimpleDateFormat
-import java.util.*
+import java.time.Instant
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 object DateUtils {
-    private val dateFormat = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
-    private val shortDateFormat = SimpleDateFormat("dd MMM", Locale.getDefault())
-    private val monthYearFormat = SimpleDateFormat("MMM yyyy", Locale.getDefault())
-    private val fullDateFormat = SimpleDateFormat("dd MMMM yyyy", Locale.getDefault())
-    private val timeFormat = SimpleDateFormat("hh:mm a", Locale.getDefault())
+    private val dateFormat = DateTimeFormatter.ofPattern("dd MMM yyyy", Locale.getDefault())
+    private val shortDateFormat = DateTimeFormatter.ofPattern("dd MMM", Locale.getDefault())
+    private val monthYearFormat = DateTimeFormatter.ofPattern("MMM yyyy", Locale.getDefault())
+    private val fullDateFormat = DateTimeFormatter.ofPattern("dd MMMM yyyy", Locale.getDefault())
+    private val timeFormat = DateTimeFormatter.ofPattern("hh:mm a", Locale.getDefault())
 
-    fun formatDate(timestamp: Long): String = dateFormat.format(Date(timestamp))
-    fun formatShortDate(timestamp: Long): String = shortDateFormat.format(Date(timestamp))
-    fun formatMonthYear(timestamp: Long): String = monthYearFormat.format(Date(timestamp))
-    fun formatFullDate(timestamp: Long): String = fullDateFormat.format(Date(timestamp))
-    fun formatTime(timestamp: Long): String = timeFormat.format(Date(timestamp))
+    private fun toLocalDateTime(timestamp: Long): LocalDateTime =
+        Instant.ofEpochMilli(timestamp).atZone(ZoneId.systemDefault()).toLocalDateTime()
+
+    private fun toLocalDate(timestamp: Long): LocalDate =
+        Instant.ofEpochMilli(timestamp).atZone(ZoneId.systemDefault()).toLocalDate()
+
+    fun formatDate(timestamp: Long): String = toLocalDateTime(timestamp).format(dateFormat)
+    fun formatShortDate(timestamp: Long): String = toLocalDateTime(timestamp).format(shortDateFormat)
+    fun formatMonthYear(timestamp: Long): String = toLocalDateTime(timestamp).format(monthYearFormat)
+    fun formatFullDate(timestamp: Long): String = toLocalDateTime(timestamp).format(fullDateFormat)
+    fun formatTime(timestamp: Long): String = toLocalDateTime(timestamp).format(timeFormat)
 
     fun getStartOfDay(timestamp: Long): Long {
-        val cal = Calendar.getInstance()
-        cal.timeInMillis = timestamp
-        cal.set(Calendar.HOUR_OF_DAY, 0)
-        cal.set(Calendar.MINUTE, 0)
-        cal.set(Calendar.SECOND, 0)
-        cal.set(Calendar.MILLISECOND, 0)
-        return cal.timeInMillis
+        val date = toLocalDate(timestamp)
+        return date.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
     }
 
     fun getEndOfDay(timestamp: Long): Long {
-        val cal = Calendar.getInstance()
-        cal.timeInMillis = timestamp
-        cal.set(Calendar.HOUR_OF_DAY, 23)
-        cal.set(Calendar.MINUTE, 59)
-        cal.set(Calendar.SECOND, 59)
-        cal.set(Calendar.MILLISECOND, 999)
-        return cal.timeInMillis
+        val date = toLocalDate(timestamp)
+        return date.atTime(23, 59, 59, 999_000_000)
+            .atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
     }
 
     fun getStartOfMonth(timestamp: Long): Long {
-        val cal = Calendar.getInstance()
-        cal.timeInMillis = timestamp
-        cal.set(Calendar.DAY_OF_MONTH, 1)
-        return getStartOfDay(cal.timeInMillis)
+        val date = toLocalDate(timestamp).withDayOfMonth(1)
+        return date.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
     }
 
     fun getEndOfMonth(timestamp: Long): Long {
-        val cal = Calendar.getInstance()
-        cal.timeInMillis = timestamp
-        cal.set(Calendar.DAY_OF_MONTH, cal.getActualMaximum(Calendar.DAY_OF_MONTH))
-        return getEndOfDay(cal.timeInMillis)
+        val date = toLocalDate(timestamp)
+        val lastDay = date.withDayOfMonth(date.lengthOfMonth())
+        return lastDay.atTime(23, 59, 59, 999_000_000)
+            .atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
     }
 
     fun getStartOfWeek(timestamp: Long): Long {
-        val cal = Calendar.getInstance()
-        cal.timeInMillis = timestamp
-        cal.set(Calendar.DAY_OF_WEEK, cal.firstDayOfWeek)
-        return getStartOfDay(cal.timeInMillis)
+        val date = toLocalDate(timestamp)
+        val startOfWeek = date.with(java.time.DayOfWeek.MONDAY)
+        return startOfWeek.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
     }
 
-    fun isToday(timestamp: Long): Boolean {
-        val today = Calendar.getInstance()
-        val date = Calendar.getInstance()
-        date.timeInMillis = timestamp
-        return today.get(Calendar.YEAR) == date.get(Calendar.YEAR) &&
-                today.get(Calendar.DAY_OF_YEAR) == date.get(Calendar.DAY_OF_YEAR)
-    }
+    fun isToday(timestamp: Long): Boolean = toLocalDate(timestamp) == LocalDate.now()
 
-    fun isYesterday(timestamp: Long): Boolean {
-        val yesterday = Calendar.getInstance()
-        yesterday.add(Calendar.DAY_OF_YEAR, -1)
-        val date = Calendar.getInstance()
-        date.timeInMillis = timestamp
-        return yesterday.get(Calendar.YEAR) == date.get(Calendar.YEAR) &&
-                yesterday.get(Calendar.DAY_OF_YEAR) == date.get(Calendar.DAY_OF_YEAR)
-    }
+    fun isYesterday(timestamp: Long): Boolean = toLocalDate(timestamp) == LocalDate.now().minusDays(1)
 
     fun getRelativeDateLabel(timestamp: Long): String {
         return when {
