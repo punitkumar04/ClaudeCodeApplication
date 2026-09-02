@@ -73,7 +73,7 @@ class ExpenseRepositoryImpl @Inject constructor(
             // Sync to Firestore
             try {
                 val data = expenseToMap(newExpense)
-                firestoreExpenseSource.addExpense(newExpense.projectId, data)
+                firestoreExpenseSource.addExpense(newExpense.projectId, id, data)
                 expenseDao.markAsSynced(id)
             } catch (e: Exception) {
                 Log.w(TAG, "Failed to sync new expense to Firestore, will retry later", e)

@@ -19,9 +19,9 @@ class FirestoreExpenseSource @Inject constructor(
             .document(projectId)
             .collection(Constants.FIRESTORE_EXPENSES)
 
-    suspend fun addExpense(projectId: String, expenseData: Map<String, Any?>): String {
-        val docRef = expensesCollection(projectId).add(expenseData).await()
-        return docRef.id
+    suspend fun addExpense(projectId: String, expenseId: String, expenseData: Map<String, Any?>): String {
+        expensesCollection(projectId).document(expenseId).set(expenseData).await()
+        return expenseId
     }
 
     suspend fun updateExpense(projectId: String, expenseId: String, data: Map<String, Any?>) {
