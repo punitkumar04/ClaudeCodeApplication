@@ -82,7 +82,7 @@ class FirestoreProjectSource @Inject constructor(
         val listener = projectsCollection.document(projectId)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
-                    close(error)
+                    android.util.Log.w("FirestoreProject", "Snapshot listener error", error)
                     return@addSnapshotListener
                 }
                 val data = if (snapshot != null && snapshot.exists()) {

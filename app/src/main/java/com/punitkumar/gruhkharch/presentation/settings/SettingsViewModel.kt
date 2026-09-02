@@ -41,7 +41,7 @@ class SettingsViewModel @Inject constructor(
 
     init {
         loadUserProfile()
-        observeProject()
+        observeProjectChanges()
     }
 
     private fun loadUserProfile() {
@@ -54,24 +54,32 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    private fun observeProject() {
-        val projectId = currentProjectHolder.projectId.value ?: return
-        val currentUserId = authRepository.currentUserId ?: ""
+    private fun observeProjectChanges() {
+        viewModelScope.launch {
+            currentProjectHolder.projectId.collect { projectId ->
+                observeJob?.cancel()
+                if (projectId == null) {
+                    _state.update { it.copy(project = null) }
+                } else {
+                    observeJob = launch { observeProject(projectId) }
+                }
+            }
+        }
+    }
 
-        observeJob?.cancel()
-        observeJob = viewModelScope.launch {
-            projectRepository.observeProject(projectId).collect { project ->
-                if (project != null) {
-                    _state.update {
-                        it.copy(
-                            project = project,
-                            inviteCode = project.inviteCode,
-                            members = project.members,
-                            budget = if (project.budget > 0) project.budget.toLong().toString() else "",
-                            currentStage = project.currentStage,
-                            isProjectOwner = project.createdBy == currentUserId
-                        )
-                    }
+    private suspend fun observeProject(projectId: String) {
+        val currentUserId = authRepository.currentUserId ?: ""
+        projectRepository.observeProject(projectId).collect { project ->
+            if (project != null) {
+                _state.update {
+                    it.copy(
+                        project = project,
+                        inviteCode = project.inviteCode,
+                        members = project.members,
+                        budget = if (project.budget > 0) project.budget.toLong().toString() else "",
+                        currentStage = project.currentStage,
+                        isProjectOwner = project.createdBy == currentUserId
+                    )
                 }
             }
         }
@@ -83,7 +91,11 @@ class SettingsViewModel @Inject constructor(
 
     fun saveBudget() {
         val project = _state.value.project ?: return
-        val budgetAmount = _state.value.budget.toDoubleOrNull() ?: return
+        val budgetAmount = _state.value.budget.toDoubleOrNull()
+        if (budgetAmount == null || budgetAmount < 0 || !budgetAmount.isFinite()) {
+            _state.update { it.copy(message = "Enter a valid budget amount") }
+            return
+        }
         viewModelScope.launch {
             projectRepository.updateBudget(project.id, budgetAmount)
                 .onSuccess {

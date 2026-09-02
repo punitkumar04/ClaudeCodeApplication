@@ -150,7 +150,8 @@ class AddExpenseViewModel @Inject constructor(
         val s = _state.value
         if (!s.canEdit) return
         if (s.title.isBlank()) { _state.update { it.copy(error = "Title is required") }; return }
-        if (s.amount.toDoubleOrNull() == null || s.amount.toDouble() <= 0) {
+        val parsedAmount = s.amount.toDoubleOrNull()
+        if (parsedAmount == null || parsedAmount <= 0 || !parsedAmount.isFinite()) {
             _state.update { it.copy(error = "Enter a valid amount") }; return
         }
         if (s.category.isBlank()) { _state.update { it.copy(error = "Select a category") }; return }
@@ -162,7 +163,7 @@ class AddExpenseViewModel @Inject constructor(
             val expense = Expense(
                 id = editingExpenseId ?: "",
                 title = s.title.trim(),
-                amount = s.amount.toDouble(),
+                amount = parsedAmount,
                 date = s.date,
                 paidBy = s.paidByMember ?: Member(),
                 paymentMode = s.paymentMode,
