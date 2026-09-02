@@ -73,14 +73,8 @@ class ProjectRepositoryImpl @Inject constructor(
 
             if (!alreadyMember) {
                 val colorIndex = existingMembers.size % Constants.MEMBER_COLORS.size
-                val newMemberMap = mapOf("userId" to userId, "name" to userName, "role" to "FAMILY_MEMBER", "color" to Constants.MEMBER_COLORS[colorIndex])
-                val updatedMembers = existingMembers + newMemberMap
-                val existingMemberIds = (projectData["memberIds"] as? List<*>)?.filterIsInstance<String>() ?: emptyList()
-
-                firestoreProjectSource.updateProject(projectId, projectData + mapOf(
-                    "members" to updatedMembers,
-                    "memberIds" to existingMemberIds + userId
-                ))
+                val newMemberMap = mapOf<String, Any?>("userId" to userId, "name" to userName, "role" to "FAMILY_MEMBER", "color" to Constants.MEMBER_COLORS[colorIndex])
+                firestoreProjectSource.addMemberAtomically(projectId, newMemberMap, userId)
             }
 
             val project = mapToProject(firestoreProjectSource.getProject(projectId) ?: projectData)

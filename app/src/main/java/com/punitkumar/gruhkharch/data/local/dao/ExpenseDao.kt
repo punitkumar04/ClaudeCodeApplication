@@ -62,4 +62,7 @@ interface ExpenseDao {
 
     @Query("SELECT * FROM expenses WHERE projectId = :projectId AND title LIKE '%' || :query || '%' ORDER BY date DESC")
     fun searchExpenses(projectId: String, query: String): Flow<List<ExpenseEntity>>
+
+    @Query("DELETE FROM expenses")
+    suspend fun deleteAll()
 }

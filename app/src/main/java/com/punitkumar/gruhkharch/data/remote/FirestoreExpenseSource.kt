@@ -25,7 +25,8 @@ class FirestoreExpenseSource @Inject constructor(
     }
 
     suspend fun updateExpense(projectId: String, expenseId: String, data: Map<String, Any?>) {
-        expensesCollection(projectId).document(expenseId).set(data).await()
+        val filtered = data.filterValues { it != null }
+        expensesCollection(projectId).document(expenseId).update(filtered).await()
     }
 
     suspend fun deleteExpense(projectId: String, expenseId: String) {

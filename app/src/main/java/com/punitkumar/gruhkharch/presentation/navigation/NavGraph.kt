@@ -216,12 +216,12 @@ fun AppNavGraph(isSignedIn: Boolean, currentProjectHolder: CurrentProjectHolder)
                 SettingsScreen(
                     onSignOut = {
                         navController.navigate(Routes.Auth.route) {
-                            popUpTo(0) { inclusive = true }
+                            popUpTo(navController.graph.id) { inclusive = true }
                         }
                     },
                     onProjectDeleted = {
                         navController.navigate(Routes.ProjectsList.route) {
-                            popUpTo(0) { inclusive = true }
+                            popUpTo(navController.graph.id) { inclusive = true }
                         }
                     }
                 )

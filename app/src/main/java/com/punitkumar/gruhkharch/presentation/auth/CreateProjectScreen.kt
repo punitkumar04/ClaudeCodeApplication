@@ -25,6 +25,7 @@ fun CreateProjectScreen(
 
     LaunchedEffect(authState) {
         if (authState is AuthState.Success && viewModel.hasProject.value) {
+            viewModel.resetAuthState()
             onProjectCreated()
         }
     }
@@ -149,6 +150,7 @@ fun JoinProjectScreen(
 
     LaunchedEffect(authState) {
         if (authState is AuthState.Success && viewModel.hasProject.value) {
+            viewModel.resetAuthState()
             onProjectJoined()
         }
     }

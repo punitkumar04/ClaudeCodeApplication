@@ -1,5 +1,6 @@
 package com.punitkumar.gruhkharch.data.remote
 
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.punitkumar.gruhkharch.util.Constants
 import kotlinx.coroutines.channels.awaitClose
@@ -21,7 +22,8 @@ class FirestoreProjectSource @Inject constructor(
     }
 
     suspend fun updateProject(projectId: String, data: Map<String, Any?>) {
-        projectsCollection.document(projectId).set(data).await()
+        val filtered = data.filterValues { it != null }
+        projectsCollection.document(projectId).update(filtered).await()
     }
 
     suspend fun getProject(projectId: String): Map<String, Any?>? {
@@ -48,6 +50,18 @@ class FirestoreProjectSource @Inject constructor(
         return snapshot.documents.map { doc ->
             (doc.data ?: emptyMap()).plus("id" to doc.id)
         }
+    }
+
+    suspend fun addMemberAtomically(projectId: String, memberMap: Map<String, Any?>, userId: String) {
+        val docRef = projectsCollection.document(projectId)
+        firestore.runTransaction { transaction ->
+            val snapshot = transaction.get(docRef)
+            val memberIds = (snapshot.get("memberIds") as? List<*>)?.filterIsInstance<String>() ?: emptyList()
+            if (userId !in memberIds) {
+                transaction.update(docRef, "members", FieldValue.arrayUnion(memberMap))
+                transaction.update(docRef, "memberIds", FieldValue.arrayUnion(userId))
+            }
+        }.await()
     }
 
     suspend fun deleteProject(projectId: String) {
