@@ -25,7 +25,7 @@
     <string name="export_csv">Export CSV</string>
     <string name="export_pdf">Export PDF</string>
     <string name="share">Share</string>
-    <string name="default_web_client_id" translatable="false">YOUR_WEB_CLIENT_ID</string>
+    <string name="default_web_client_id" translatable="false">2466525394-0si5aquifc8j76hdrnkl4bhcl735m7m3.apps.googleusercontent.com</string>
     <string name="offline_mode">You are offline. Changes will sync when connected.</string>
     <string name="expense_added">Expense added successfully!</string>
     <string name="no_expenses">No expenses yet. Tap + to add one.</string>
