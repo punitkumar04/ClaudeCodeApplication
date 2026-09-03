@@ -121,12 +121,14 @@ class AddExpenseViewModel @Inject constructor(
         viewModelScope.launch {
             val expense = expenseRepository.getExpenseById(expenseId) ?: return@launch
             val category = DefaultCategories.all.find { it.name == expense.category }
+            val currentUser = authRepository.currentUser
+            val currentMember = _state.value.members.find { it.userId == currentUser?.id }
             _state.update {
                 it.copy(
                     title = expense.title,
                     amount = expense.amount.toString(),
                     date = System.currentTimeMillis(),
-                    paidByMember = expense.paidBy,
+                    paidByMember = currentMember ?: it.paidByMember,
                     paymentMode = expense.paymentMode,
                     category = expense.category,
                     subCategory = expense.subCategory ?: "",
