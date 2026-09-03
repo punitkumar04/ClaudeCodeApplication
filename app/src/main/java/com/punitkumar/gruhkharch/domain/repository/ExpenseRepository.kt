@@ -17,5 +17,6 @@ interface ExpenseRepository {
     suspend fun deleteExpense(expense: Expense): Result<Unit>
     fun searchExpenses(projectId: String, query: String): Flow<List<Expense>>
     suspend fun syncExpenses(projectId: String)
+    suspend fun pullRemoteExpenses(projectId: String)
     fun observeRemoteExpenses(projectId: String): Flow<List<Expense>>
 }

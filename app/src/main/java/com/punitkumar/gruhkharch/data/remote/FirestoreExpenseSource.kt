@@ -38,6 +38,16 @@ class FirestoreExpenseSource @Inject constructor(
         return if (doc.exists()) doc.data?.plus("id" to doc.id) else null
     }
 
+    suspend fun getAllExpenses(projectId: String): List<Map<String, Any?>> {
+        val snapshot = expensesCollection(projectId)
+            .orderBy("date", Query.Direction.DESCENDING)
+            .get()
+            .await()
+        return snapshot.documents.map { doc ->
+            (doc.data ?: emptyMap()).plus("id" to doc.id)
+        }
+    }
+
     fun observeExpenses(projectId: String): Flow<List<Map<String, Any?>>> = callbackFlow {
         val listener = expensesCollection(projectId)
             .orderBy("date", Query.Direction.DESCENDING)
