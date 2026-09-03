@@ -80,6 +80,9 @@ class ProjectsListViewModel @Inject constructor(
 
     fun selectProject(projectId: String) {
         currentProjectHolder.setProject(projectId)
+        viewModelScope.launch {
+            expenseRepository.pullRemoteExpenses(projectId)
+        }
     }
 
     fun deleteProject(projectId: String) {

@@ -145,6 +145,18 @@ class ExpenseRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun pullRemoteExpenses(projectId: String) {
+        try {
+            val remoteMaps = firestoreExpenseSource.getAllExpenses(projectId)
+            val remoteExpenses = remoteMaps.mapNotNull { mapToExpense(it, projectId) }
+            remoteExpenses.forEach { expense ->
+                expenseDao.insertExpense(expense.toEntity())
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "Failed to pull remote expenses for $projectId", e)
+        }
+    }
+
     override fun observeRemoteExpenses(projectId: String): Flow<List<Expense>> {
         return firestoreExpenseSource.observeExpenses(projectId).map { list ->
             list.mapNotNull { map -> mapToExpense(map, projectId) }

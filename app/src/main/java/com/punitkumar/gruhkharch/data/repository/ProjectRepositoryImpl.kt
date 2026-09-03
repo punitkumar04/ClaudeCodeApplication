@@ -86,7 +86,16 @@ class ProjectRepositoryImpl @Inject constructor(
     }
 
     override suspend fun getProject(projectId: String): Project? {
-        return projectDao.getProjectById(projectId)?.toDomain()
+        val local = projectDao.getProjectById(projectId)?.toDomain()
+        if (local != null) return local
+        return try {
+            val remote = firestoreProjectSource.getProject(projectId) ?: return null
+            val project = mapToProject(remote)
+            projectDao.insertProject(project.toEntity())
+            project
+        } catch (e: Exception) {
+            null
+        }
     }
 
     override fun observeProject(projectId: String): Flow<Project?> {
@@ -105,9 +114,11 @@ class ProjectRepositoryImpl @Inject constructor(
 
     override suspend fun getProjectsForUser(userId: String): List<Project> {
         return try {
-            firestoreProjectSource.getProjectsForUser(userId).map { mapToProject(it) }
+            val projects = firestoreProjectSource.getProjectsForUser(userId).map { mapToProject(it) }
+            projects.forEach { projectDao.insertProject(it.toEntity()) }
+            projects
         } catch (e: Exception) {
-            emptyList()
+            projectDao.getAllProjectsSync().map { it.toDomain() }
         }
     }
 

@@ -78,6 +78,8 @@ class HomeViewModel @Inject constructor(
             )
         }
 
+        expenseRepository.pullRemoteExpenses(projectId)
+
         val now = System.currentTimeMillis()
         val monthStart = DateUtils.getStartOfMonth(now)
         val monthEnd = DateUtils.getEndOfMonth(now)
