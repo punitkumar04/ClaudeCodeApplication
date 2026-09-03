@@ -4,6 +4,7 @@ import android.content.Context
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuthRecentLoginRequiredException
 import com.google.firebase.auth.GoogleAuthProvider
 import com.punitkumar.gruhkharch.R
 import com.punitkumar.gruhkharch.domain.model.User
@@ -46,22 +47,31 @@ class FirebaseAuthSource @Inject constructor(
 
     suspend fun deleteAccount() {
         val user = auth.currentUser ?: throw Exception("No user signed in")
-        user.delete().await()
-        val webClientId = context.getString(R.string.default_web_client_id)
-        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-            .requestIdToken(webClientId)
-            .requestEmail()
-            .build()
+        try {
+            user.delete().await()
+        } catch (e: FirebaseAuthRecentLoginRequiredException) {
+            val googleAccount = GoogleSignIn.getLastSignedInAccount(context)
+            val idToken = googleAccount?.idToken
+                ?: throw Exception("Re-authentication required. Please sign out and sign in again, then retry.")
+            val credential = GoogleAuthProvider.getCredential(idToken, null)
+            user.reauthenticate(credential).await()
+            user.delete().await()
+        }
+        val gso = buildGso()
         GoogleSignIn.getClient(context, gso).revokeAccess().await()
     }
 
     fun signOut() {
         auth.signOut()
+        val gso = buildGso()
+        GoogleSignIn.getClient(context, gso).signOut()
+    }
+
+    private fun buildGso(): GoogleSignInOptions {
         val webClientId = context.getString(R.string.default_web_client_id)
-        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+        return GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
             .requestIdToken(webClientId)
             .requestEmail()
             .build()
-        GoogleSignIn.getClient(context, gso).signOut()
     }
 }

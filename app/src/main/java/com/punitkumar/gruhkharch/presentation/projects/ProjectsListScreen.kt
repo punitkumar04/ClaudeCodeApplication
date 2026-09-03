@@ -291,7 +291,7 @@ private fun ProjectCard(
                 if (project.budget > 0) {
                     Column(horizontalAlignment = Alignment.End) {
                         Text(
-                            text = "Budget",
+                            text = stringResource(R.string.budget),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -329,13 +329,13 @@ private fun ProjectCard(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
                         imageVector = Icons.Filled.People,
-                        contentDescription = "Members",
+                        contentDescription = stringResource(R.string.cd_members),
                         modifier = Modifier.size(14.dp),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = "${project.members.size} member${if (project.members.size != 1) "s" else ""}",
+                        text = stringResource(R.string.member_count_format, project.members.size),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

@@ -54,7 +54,7 @@ fun HomeScreen(
             ) {
                 Icon(
                     imageVector = Icons.Filled.Folder,
-                    contentDescription = "No project",
+                    contentDescription = stringResource(R.string.cd_no_expenses),
                     modifier = Modifier.size(72.dp),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
                 )
@@ -85,7 +85,7 @@ fun HomeScreen(
         // Header
         item {
             Text(
-                text = state.projectName.ifEmpty { "Construction Khata" },
+                text = state.projectName.ifEmpty { stringResource(R.string.construction_khata) },
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold
             )
@@ -96,13 +96,13 @@ fun HomeScreen(
                 ) {
                     Icon(
                         Icons.Filled.Engineering,
-                        contentDescription = "Current stage",
+                        contentDescription = stringResource(R.string.cd_current_stage),
                         modifier = Modifier.size(16.dp),
                         tint = MaterialTheme.colorScheme.primary
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = "Stage: ${state.currentStage}",
+                        text = stringResource(R.string.stage_format, state.currentStage),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.primary
                     )
@@ -156,12 +156,12 @@ fun HomeScreen(
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text(
-                                text = "${(progress * 100).toInt()}% of budget",
+                                text = stringResource(R.string.budget_percent_format, (progress * 100).toInt()),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
                             )
                             Text(
-                                text = "Budget: ${CurrencyFormatter.formatCompact(state.budget)}",
+                                text = stringResource(R.string.budget_format, CurrencyFormatter.formatCompact(state.budget)),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
                             )
@@ -286,7 +286,7 @@ fun HomeScreen(
                     Text(stringResource(R.string.view_all))
                     Icon(
                         Icons.Filled.ArrowForward,
-                        contentDescription = "View all",
+                        contentDescription = stringResource(R.string.cd_view_all),
                         modifier = Modifier.size(16.dp)
                     )
                 }
@@ -309,7 +309,7 @@ fun HomeScreen(
                     ) {
                         Icon(
                             Icons.Filled.ReceiptLong,
-                            contentDescription = "No expenses",
+                            contentDescription = stringResource(R.string.cd_no_expenses),
                             modifier = Modifier.size(48.dp),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
                         )
@@ -352,7 +352,7 @@ fun HomeScreen(
                     ) {
                         Icon(
                             Icons.Filled.Receipt,
-                            contentDescription = "Expense",
+                            contentDescription = stringResource(R.string.cd_expense),
                             tint = MaterialTheme.colorScheme.onPrimaryContainer,
                             modifier = Modifier.size(20.dp)
                         )

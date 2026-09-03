@@ -65,17 +65,21 @@ class FirestoreProjectSource @Inject constructor(
     }
 
     suspend fun deleteProject(projectId: String) {
-        // Delete all expenses subcollection first
-        val expenses = firestore.collection(Constants.FIRESTORE_PROJECTS)
+        val expensesRef = firestore.collection(Constants.FIRESTORE_PROJECTS)
             .document(projectId)
             .collection(Constants.FIRESTORE_EXPENSES)
-            .get()
-            .await()
-        for (doc in expenses.documents) {
-            doc.reference.delete().await()
+        val expenses = expensesRef.get().await()
+
+        val chunks = expenses.documents.chunked(499)
+        for (chunk in chunks) {
+            val batch = firestore.batch()
+            chunk.forEach { batch.delete(it.reference) }
+            batch.delete(projectsCollection.document(projectId))
+            batch.commit().await()
         }
-        // Delete the project document
-        projectsCollection.document(projectId).delete().await()
+        if (expenses.documents.isEmpty()) {
+            projectsCollection.document(projectId).delete().await()
+        }
     }
 
     fun observeProject(projectId: String): Flow<Map<String, Any?>?> = callbackFlow {
