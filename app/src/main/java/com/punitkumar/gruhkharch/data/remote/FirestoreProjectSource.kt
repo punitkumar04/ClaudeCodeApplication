@@ -12,6 +12,11 @@ import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import javax.inject.Singleton
 
+data class RemoteProjects(
+    val projects: List<Map<String, Any?>>,
+    val isFromCache: Boolean
+)
+
 @Singleton
 class FirestoreProjectSource @Inject constructor(
     private val firestore: FirebaseFirestore
@@ -79,14 +84,15 @@ class FirestoreProjectSource @Inject constructor(
         return if (doc.exists()) doc.data?.plus("id" to doc.id) else null
     }
 
-    suspend fun getProjectsForUser(userId: String, source: Source = Source.DEFAULT): List<Map<String, Any?>> {
+    suspend fun getProjectsForUser(userId: String, source: Source = Source.DEFAULT): RemoteProjects {
         val snapshot = projectsCollection
             .whereArrayContains("memberIds", userId)
             .get(source)
             .await()
-        return snapshot.documents.map { doc ->
-            (doc.data ?: emptyMap()).plus("id" to doc.id)
-        }
+        return RemoteProjects(
+            projects = snapshot.documents.map { doc -> (doc.data ?: emptyMap()).plus("id" to doc.id) },
+            isFromCache = snapshot.metadata.isFromCache
+        )
     }
 
     suspend fun addMemberAtomically(projectId: String, memberMap: Map<String, Any?>, userId: String) {

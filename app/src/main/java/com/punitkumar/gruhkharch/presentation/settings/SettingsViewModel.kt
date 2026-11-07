@@ -220,11 +220,14 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    fun removeNameOnlyMember(member: Member) {
+    fun removeMember(member: Member, regenerateCode: Boolean) {
         val project = _state.value.project ?: return
         viewModelScope.launch {
-            projectRepository.removeNameOnlyMember(project.id, member.userId)
-                .onSuccess { _state.update { it.copy(message = "${member.name} removed") } }
+            projectRepository.removeMember(project.id, member.userId)
+                .onSuccess {
+                    _state.update { it.copy(message = "${member.name} removed") }
+                    if (regenerateCode) regenerateInviteCode()
+                }
                 .onFailure { e -> _state.update { it.copy(message = e.message ?: "Failed to remove member") } }
         }
     }

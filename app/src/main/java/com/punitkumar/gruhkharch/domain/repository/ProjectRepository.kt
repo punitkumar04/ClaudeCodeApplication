@@ -17,7 +17,6 @@ interface ProjectRepository {
     suspend fun addMember(projectId: String, member: Member): Result<Unit>
     suspend fun removeMember(projectId: String, userId: String): Result<Unit>
     suspend fun addNameOnlyMember(projectId: String, name: String): Result<Member>
-    suspend fun removeNameOnlyMember(projectId: String, memberId: String): Result<Unit>
     suspend fun regenerateInviteCode(projectId: String): Result<String>
     suspend fun deleteProject(projectId: String): Result<Unit>
 }
