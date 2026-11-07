@@ -54,6 +54,7 @@ class ExpensesViewModel @Inject constructor(
         viewModelScope.launch {
             currentProjectHolder.projectId.collect { id ->
                 dataJob?.cancel()
+                observeJob?.cancel()
                 if (id == null) {
                     _state.value = ExpensesState(hasProject = false, isLoading = false)
                 } else {

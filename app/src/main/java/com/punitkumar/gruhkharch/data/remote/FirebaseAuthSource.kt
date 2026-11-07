@@ -1,6 +1,7 @@
 package com.punitkumar.gruhkharch.data.remote
 
 import android.content.Context
+import android.util.Log
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.firebase.auth.FirebaseAuth
@@ -12,6 +13,8 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import javax.inject.Singleton
+
+private const val TAG = "FirebaseAuthSource"
 
 @Singleton
 class FirebaseAuthSource @Inject constructor(
@@ -50,15 +53,25 @@ class FirebaseAuthSource @Inject constructor(
         try {
             user.delete().await()
         } catch (e: FirebaseAuthRecentLoginRequiredException) {
-            val googleAccount = GoogleSignIn.getLastSignedInAccount(context)
-            val idToken = googleAccount?.idToken
+            val idToken = freshGoogleIdToken()
                 ?: throw Exception("Re-authentication required. Please sign out and sign in again, then retry.")
             val credential = GoogleAuthProvider.getCredential(idToken, null)
             user.reauthenticate(credential).await()
             user.delete().await()
         }
-        val gso = buildGso()
-        GoogleSignIn.getClient(context, gso).revokeAccess().await()
+        // The account is already gone at this point, so a revoke failure must not fail the deletion.
+        try {
+            GoogleSignIn.getClient(context, buildGso()).revokeAccess().await()
+        } catch (e: Exception) {
+            Log.w(TAG, "Failed to revoke Google access after account deletion", e)
+        }
+    }
+
+    // The cached account's ID token expires after an hour; silent sign-in returns a fresh one.
+    private suspend fun freshGoogleIdToken(): String? = try {
+        GoogleSignIn.getClient(context, buildGso()).silentSignIn().await().idToken
+    } catch (e: Exception) {
+        GoogleSignIn.getLastSignedInAccount(context)?.idToken
     }
 
     fun signOut() {

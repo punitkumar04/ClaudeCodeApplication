@@ -7,6 +7,7 @@ import com.punitkumar.gruhkharch.domain.model.Expense
 import com.punitkumar.gruhkharch.domain.repository.AuthRepository
 import com.punitkumar.gruhkharch.domain.repository.ExpenseRepository
 import com.punitkumar.gruhkharch.domain.repository.ProjectRepository
+import com.punitkumar.gruhkharch.util.CurrencyFormatter
 import com.punitkumar.gruhkharch.util.DateUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
@@ -118,7 +119,7 @@ class ReportsViewModel @Inject constructor(
         sb.appendLine("Title,Amount,Date,Paid By,Payment Mode,Category,Sub-Category,Stage,Vendor,Notes,Tags")
         expenses.forEach { e ->
             sb.appendLine(
-                "${csvEscape(e.title)},${e.amount},${csvEscape(DateUtils.formatDate(e.date))},${csvEscape(e.paidBy.name)}," +
+                "${csvEscape(e.title)},${CurrencyFormatter.formatPlainAmount(e.amount)},${csvEscape(DateUtils.formatDate(e.date))},${csvEscape(e.paidBy.name)}," +
                 "${csvEscape(e.paymentMode.displayName)},${csvEscape(e.category)},${csvEscape(e.subCategory ?: "")},${csvEscape(e.stage)}," +
                 "${csvEscape(e.vendor ?: "")},${csvEscape(e.notes ?: "")},${csvEscape(e.tags.joinToString(";"))}"
             )

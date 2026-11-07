@@ -57,8 +57,15 @@ interface ExpenseDao {
     @Query("DELETE FROM expenses WHERE projectId = :projectId")
     suspend fun deleteAllExpensesForProject(projectId: String)
 
-    @Query("UPDATE expenses SET isSynced = 1 WHERE id = :id")
-    suspend fun markAsSynced(id: String)
+    @Query("SELECT id FROM expenses WHERE projectId = :projectId AND isSynced = 1")
+    suspend fun getSyncedExpenseIds(projectId: String): List<String>
+
+    @Query("DELETE FROM expenses WHERE id IN (:ids)")
+    suspend fun deleteExpensesByIds(ids: List<String>)
+
+    // Only marks the row synced if it hasn't been edited again since this version was pushed.
+    @Query("UPDATE expenses SET isSynced = 1 WHERE id = :id AND updatedAt = :updatedAt")
+    suspend fun markAsSynced(id: String, updatedAt: Long)
 
     @Query("SELECT * FROM expenses WHERE projectId = :projectId AND title LIKE '%' || :query || '%' ORDER BY date DESC")
     fun searchExpenses(projectId: String, query: String): Flow<List<ExpenseEntity>>

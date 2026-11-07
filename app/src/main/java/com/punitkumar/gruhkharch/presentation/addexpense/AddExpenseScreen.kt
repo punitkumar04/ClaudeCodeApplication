@@ -150,13 +150,15 @@ fun AddExpenseScreen(
 
             if (showDatePicker) {
                 val datePickerState = rememberDatePickerState(
-                    initialSelectedDateMillis = state.date
+                    initialSelectedDateMillis = com.punitkumar.gruhkharch.util.DateUtils.toDatePickerMillis(state.date)
                 )
                 DatePickerDialog(
                     onDismissRequest = { showDatePicker = false },
                     confirmButton = {
                         TextButton(onClick = {
-                            datePickerState.selectedDateMillis?.let { viewModel.updateDate(it) }
+                            datePickerState.selectedDateMillis?.let {
+                                viewModel.updateDate(com.punitkumar.gruhkharch.util.DateUtils.fromDatePickerMillis(it, state.date))
+                            }
                             showDatePicker = false
                         }) { Text(stringResource(R.string.ok)) }
                     },

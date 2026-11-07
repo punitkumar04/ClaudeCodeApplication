@@ -8,6 +8,9 @@
     <string name="settings">Settings</string>
     <string name="sign_in">Sign In</string>
     <string name="sign_in_with_google">Sign in with Google</string>
+    <string name="sign_in_failed_format">Google Sign-In failed (code %1$d). Please try again.</string>
+    <string name="sign_in_no_token">Google Sign-In did not return an ID token. Please try again.</string>
+    <string name="sign_in_config_error">Sign-in is not configured for this build of the app. Please contact support.</string>
     <string name="create_project">Create Project</string>
     <string name="join_project">Join Project</string>
     <string name="invite_code">Invite Code</string>

@@ -8,7 +8,9 @@ import com.punitkumar.gruhkharch.domain.repository.AuthRepository
 import com.punitkumar.gruhkharch.domain.repository.ExpenseRepository
 import com.punitkumar.gruhkharch.domain.repository.ProjectRepository
 import com.punitkumar.gruhkharch.domain.usecase.AddExpenseUseCase
+import com.punitkumar.gruhkharch.util.CurrencyFormatter
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -48,16 +50,16 @@ class AddExpenseViewModel @Inject constructor(
     val state: StateFlow<AddExpenseState> = _state.asStateFlow()
 
     private var projectId: String = ""
-    private var editingExpenseId: String? = null
-    private var editingCreatedAt: Long = System.currentTimeMillis()
-    private var editingCreatedBy: String = ""
+    private var editingExpense: Expense? = null
+    private var loadedExpenseId: String? = null
+    private val projectLoadJob: Job
 
     init {
-        loadProjectData()
+        projectLoadJob = loadProjectData()
     }
 
-    private fun loadProjectData() {
-        viewModelScope.launch {
+    private fun loadProjectData(): Job {
+        return viewModelScope.launch {
             projectId = currentProjectHolder.projectId.value ?: return@launch
             val project = projectRepository.getProject(projectId) ?: return@launch
 
@@ -74,8 +76,18 @@ class AddExpenseViewModel @Inject constructor(
         }
     }
 
+    // The screen calls this again after a configuration change; don't wipe in-progress edits.
+    private fun claimLoad(expenseId: String): Boolean {
+        if (loadedExpenseId == expenseId) return false
+        loadedExpenseId = expenseId
+        return true
+    }
+
     fun loadExpense(expenseId: String) {
+        if (!claimLoad(expenseId)) return
         viewModelScope.launch {
+            // Project defaults must be applied first so they don't overwrite the expense's values.
+            projectLoadJob.join()
             val expense = expenseRepository.getExpenseById(expenseId) ?: return@launch
             val currentUserId = authRepository.currentUserId ?: ""
 
@@ -91,15 +103,13 @@ class AddExpenseViewModel @Inject constructor(
                 return@launch
             }
 
-            editingExpenseId = expense.id
-            editingCreatedAt = expense.createdAt
-            editingCreatedBy = expense.createdBy
+            editingExpense = expense
 
             val category = DefaultCategories.all.find { it.name == expense.category }
             _state.update {
                 it.copy(
                     title = expense.title,
-                    amount = expense.amount.toString(),
+                    amount = CurrencyFormatter.formatPlainAmount(expense.amount),
                     date = expense.date,
                     paidByMember = expense.paidBy,
                     paymentMode = expense.paymentMode,
@@ -118,7 +128,9 @@ class AddExpenseViewModel @Inject constructor(
     }
 
     fun loadExpenseAsDuplicate(expenseId: String) {
+        if (!claimLoad(expenseId)) return
         viewModelScope.launch {
+            projectLoadJob.join()
             val expense = expenseRepository.getExpenseById(expenseId) ?: return@launch
             val category = DefaultCategories.all.find { it.name == expense.category }
             val currentUser = authRepository.currentUser
@@ -126,7 +138,7 @@ class AddExpenseViewModel @Inject constructor(
             _state.update {
                 it.copy(
                     title = expense.title,
-                    amount = expense.amount.toString(),
+                    amount = CurrencyFormatter.formatPlainAmount(expense.amount),
                     date = System.currentTimeMillis(),
                     paidByMember = currentMember ?: it.paidByMember,
                     paymentMode = expense.paymentMode,
@@ -187,8 +199,13 @@ class AddExpenseViewModel @Inject constructor(
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true, error = null) }
 
-            val expense = Expense(
-                id = editingExpenseId ?: "",
+            // Editing starts from the stored expense so fields not on this form (receipt, tags) survive.
+            val base = editingExpense?.takeIf { s.isEditing } ?: Expense(
+                createdBy = authRepository.currentUserId ?: "",
+                createdAt = System.currentTimeMillis(),
+                projectId = projectId
+            )
+            val expense = base.copy(
                 title = s.title.trim(),
                 amount = parsedAmount,
                 date = s.date,
@@ -199,11 +216,7 @@ class AddExpenseViewModel @Inject constructor(
                 stage = s.stage,
                 vendor = s.vendor.ifBlank { null },
                 notes = s.notes.ifBlank { null },
-                tags = emptyList(),
-                createdBy = if (s.isEditing) editingCreatedBy else (authRepository.currentUserId ?: ""),
-                createdAt = if (s.isEditing) editingCreatedAt else System.currentTimeMillis(),
-                updatedAt = System.currentTimeMillis(),
-                projectId = projectId
+                updatedAt = System.currentTimeMillis()
             )
 
             val result = if (s.isEditing) {

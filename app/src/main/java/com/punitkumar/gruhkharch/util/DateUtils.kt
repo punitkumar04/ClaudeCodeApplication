@@ -4,6 +4,7 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneId
+import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
@@ -25,6 +26,18 @@ object DateUtils {
     fun formatMonthYear(timestamp: Long): String = toLocalDateTime(timestamp).format(monthYearFormat)
     fun formatFullDate(timestamp: Long): String = toLocalDateTime(timestamp).format(fullDateFormat)
     fun formatTime(timestamp: Long): String = toLocalDateTime(timestamp).format(timeFormat)
+
+    // Material's DatePicker reads and returns UTC-midnight millis. Without converting, the picker
+    // shows the wrong day for local times near midnight (e.g. 00:00–05:30 in India).
+    fun toDatePickerMillis(timestamp: Long): Long =
+        toLocalDate(timestamp).atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
+
+    /** Combines the picked day with the time of day from [keepTimeOf], in the device time zone. */
+    fun fromDatePickerMillis(pickerMillis: Long, keepTimeOf: Long): Long {
+        val pickedDate = Instant.ofEpochMilli(pickerMillis).atZone(ZoneOffset.UTC).toLocalDate()
+        val timeOfDay = toLocalDateTime(keepTimeOf).toLocalTime()
+        return pickedDate.atTime(timeOfDay).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+    }
 
     fun getStartOfDay(timestamp: Long): Long {
         val date = toLocalDate(timestamp)

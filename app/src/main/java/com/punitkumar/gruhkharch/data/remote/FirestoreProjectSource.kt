@@ -2,6 +2,7 @@ package com.punitkumar.gruhkharch.data.remote
 
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Source
 import com.punitkumar.gruhkharch.util.Constants
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -16,14 +17,16 @@ class FirestoreProjectSource @Inject constructor(
 ) {
     private val projectsCollection = firestore.collection(Constants.FIRESTORE_PROJECTS)
 
+    // The id is generated on the client, so the project is usable even if the write is still queued.
     suspend fun createProject(data: Map<String, Any?>): String {
-        val docRef = projectsCollection.add(data).await()
+        val docRef = projectsCollection.document()
+        docRef.set(data).awaitWrite()
         return docRef.id
     }
 
     suspend fun updateProject(projectId: String, data: Map<String, Any?>) {
         val filtered = data.filterValues { it != null }
-        projectsCollection.document(projectId).update(filtered).await()
+        projectsCollection.document(projectId).update(filtered).awaitWrite()
     }
 
     suspend fun getProject(projectId: String): Map<String, Any?>? {
@@ -42,10 +45,10 @@ class FirestoreProjectSource @Inject constructor(
         }
     }
 
-    suspend fun getProjectsForUser(userId: String): List<Map<String, Any?>> {
+    suspend fun getProjectsForUser(userId: String, source: Source = Source.DEFAULT): List<Map<String, Any?>> {
         val snapshot = projectsCollection
             .whereArrayContains("memberIds", userId)
-            .get()
+            .get(source)
             .await()
         return snapshot.documents.map { doc ->
             (doc.data ?: emptyMap()).plus("id" to doc.id)
@@ -64,6 +67,22 @@ class FirestoreProjectSource @Inject constructor(
         }.await()
     }
 
+    suspend fun removeMemberAtomically(projectId: String, userId: String) {
+        val docRef = projectsCollection.document(projectId)
+        firestore.runTransaction { transaction ->
+            val snapshot = transaction.get(docRef)
+            val members = (snapshot.get("members") as? List<*>)
+                ?.filterIsInstance<Map<*, *>>()
+                ?.filter { it["userId"] != userId }
+                ?: emptyList()
+            val memberIds = (snapshot.get("memberIds") as? List<*>)
+                ?.filterIsInstance<String>()
+                ?.filter { it != userId }
+                ?: emptyList()
+            transaction.update(docRef, mapOf("members" to members, "memberIds" to memberIds))
+        }.await()
+    }
+
     suspend fun deleteProject(projectId: String) {
         val expensesRef = firestore.collection(Constants.FIRESTORE_PROJECTS)
             .document(projectId)
@@ -75,10 +94,10 @@ class FirestoreProjectSource @Inject constructor(
             val batch = firestore.batch()
             chunk.forEach { batch.delete(it.reference) }
             batch.delete(projectsCollection.document(projectId))
-            batch.commit().await()
+            batch.commit().awaitWrite()
         }
         if (expenses.documents.isEmpty()) {
-            projectsCollection.document(projectId).delete().await()
+            projectsCollection.document(projectId).delete().awaitWrite()
         }
     }
 

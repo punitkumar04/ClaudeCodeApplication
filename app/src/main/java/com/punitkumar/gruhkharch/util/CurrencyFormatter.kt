@@ -1,12 +1,16 @@
 package com.punitkumar.gruhkharch.util
 
+import java.math.BigDecimal
+import java.math.RoundingMode
 import java.text.DecimalFormat
 
 object CurrencyFormatter {
     // Indian number formatting: 1,00,000 instead of 100,000
     fun formatIndianCurrency(amount: Double): String {
+        if (!amount.isFinite()) return "₹0"
         val isNegative = amount < 0
-        val absAmount = Math.abs(amount)
+        // Round first so a fraction like .996 can't round up to "1" and be appended as a digit.
+        val absAmount = BigDecimal.valueOf(Math.abs(amount)).setScale(2, RoundingMode.HALF_UP).toDouble()
 
         if (absAmount < 1000) {
             val df = DecimalFormat("#,##0.##")
@@ -51,6 +55,10 @@ object CurrencyFormatter {
         }
         return result.toString()
     }
+
+    /** Amount without grouping or exponent notation, e.g. 10000000.0 -> "10000000", 12.5 -> "12.5". */
+    fun formatPlainAmount(amount: Double): String =
+        if (amount.isFinite()) BigDecimal.valueOf(amount).stripTrailingZeros().toPlainString() else "0"
 
     fun formatCompact(amount: Double): String {
         return when {
