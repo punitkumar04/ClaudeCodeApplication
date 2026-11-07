@@ -67,6 +67,13 @@ class FirestoreProjectSource @Inject constructor(
         }.await()
     }
 
+    // arrayUnion is applied atomically on the server and also works while offline.
+    suspend fun addNameOnlyMember(projectId: String, memberMap: Map<String, Any?>) {
+        projectsCollection.document(projectId)
+            .update("members", FieldValue.arrayUnion(memberMap))
+            .awaitWrite()
+    }
+
     suspend fun removeMemberAtomically(projectId: String, userId: String) {
         val docRef = projectsCollection.document(projectId)
         firestore.runTransaction { transaction ->

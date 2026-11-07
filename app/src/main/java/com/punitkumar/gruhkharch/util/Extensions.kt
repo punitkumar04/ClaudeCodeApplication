@@ -61,7 +61,9 @@ fun Project.toEntity(): ProjectEntity = ProjectEntity(
     budget = budget,
     currency = currency,
     currentStage = currentStage,
-    membersJson = json.encodeToString(members.map { mapOf("userId" to it.userId, "name" to it.name, "role" to it.role.name, "color" to it.color) }),
+    membersJson = json.encodeToString(members.map {
+        mapOf("userId" to it.userId, "name" to it.name, "role" to it.role.name, "color" to it.color, "hasAccount" to it.hasAccount.toString())
+    }),
     stageBudgetsJson = json.encodeToString(stageBudgets),
     categoryBudgetsJson = json.encodeToString(categoryBudgets),
     createdAt = createdAt
@@ -75,7 +77,8 @@ fun ProjectEntity.toDomain(): Project {
                 userId = m["userId"] ?: "",
                 name = m["name"] ?: "",
                 role = try { MemberRole.valueOf(m["role"] ?: "FAMILY_MEMBER") } catch (e: Exception) { MemberRole.FAMILY_MEMBER },
-                color = m["color"] ?: "#8B5E3C"
+                color = m["color"] ?: "#8B5E3C",
+                hasAccount = m["hasAccount"]?.toBooleanStrictOrNull() ?: true
             )
         }
     } catch (e: Exception) {

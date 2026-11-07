@@ -179,6 +179,12 @@ fun AppNavGraph(isSignedIn: Boolean, currentProjectHolder: CurrentProjectHolder)
                         navController.navigate(Routes.Expenses.route) {
                             launchSingleTop = true
                         }
+                    },
+                    onLinkAccount = {
+                        navController.navigate(Routes.Settings.route) {
+                            popUpTo(navController.graph.startDestinationId) { saveState = true }
+                            launchSingleTop = true
+                        }
                     }
                 )
             }
@@ -229,6 +235,11 @@ fun AppNavGraph(isSignedIn: Boolean, currentProjectHolder: CurrentProjectHolder)
                         }
                     },
                     onProjectDeleted = {
+                        navController.navigate(Routes.ProjectsList.route) {
+                            popUpTo(navController.graph.id) { inclusive = true }
+                        }
+                    },
+                    onAccountSwitched = {
                         navController.navigate(Routes.ProjectsList.route) {
                             popUpTo(navController.graph.id) { inclusive = true }
                         }

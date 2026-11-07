@@ -32,6 +32,7 @@ import com.punitkumar.gruhkharch.util.DateUtils
 fun HomeScreen(
     onExpenseClick: (String) -> Unit,
     onViewAllExpenses: () -> Unit,
+    onLinkAccount: () -> Unit,
     viewModel: HomeViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
@@ -106,6 +107,30 @@ fun HomeScreen(
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.primary
                     )
+                }
+            }
+        }
+
+        if (state.isGuest) {
+            item {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(start = 16.dp, end = 8.dp, top = 8.dp, bottom = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = stringResource(R.string.guest_account_title),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onTertiaryContainer,
+                            modifier = Modifier.weight(1f)
+                        )
+                        TextButton(onClick = onLinkAccount) {
+                            Text(stringResource(R.string.link_google))
+                        }
+                    }
                 }
             }
         }

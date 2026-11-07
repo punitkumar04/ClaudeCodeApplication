@@ -198,4 +198,33 @@
     <string name="cd_expense">Expense</string>
     <string name="cd_current_stage">Current stage</string>
     <string name="cd_view_details">View details</string>
+
+    <!-- Guest accounts -->
+    <string name="continue_without_account">Continue without account</string>
+    <string name="guest_hint">No Google account needed. You can link one later to back up your data.</string>
+    <string name="whats_your_name">What\'s your name?</string>
+    <string name="guest_name_message">Your family will see this name on the expenses you add.</string>
+    <string name="continue_label">Continue</string>
+    <string name="name_label">Name</string>
+    <string name="guest_account_title">You\'re using a guest account</string>
+    <string name="guest_account_message">Your data is tied to this phone. If you uninstall the app, clear its data or change phones, you will lose access. Link a Google account to keep it safe.</string>
+    <string name="link_google_account">Link Google account</string>
+    <string name="link_google">Link Google</string>
+    <string name="guest_sign_out_title">Sign out of guest account?</string>
+    <string name="guest_sign_out_message">You are signed in as a guest. If you sign out, you will permanently lose access to these projects. Link a Google account first to keep them.</string>
+    <string name="sign_out_anyway">Sign out anyway</string>
+    <string name="google_account_in_use_title">Google account already in use</string>
+    <string name="google_account_in_use_message">This Google account already has its own Construction Khata data. You can switch to that account, but the projects of this guest account will not be moved and you will lose access to them.</string>
+    <string name="switch_account">Switch account</string>
+
+    <!-- Members without the app -->
+    <string name="add_by_name">Add by name</string>
+    <string name="add_by_name_hint">Add family members or others who don\'t use the app, so you can record expenses they paid.</string>
+    <string name="add_member_by_name">Add member by name</string>
+    <string name="add_member_by_name_message">They won\'t need the app. You can select them in \"Paid by\" when adding an expense.</string>
+    <string name="add">Add</string>
+    <string name="member_no_app">No app · added by owner</string>
+    <string name="remove_member_title">Remove %1$s?</string>
+    <string name="remove_member_message">Expenses already recorded for this person will keep their name.</string>
+    <string name="remove">Remove</string>
 </resources>

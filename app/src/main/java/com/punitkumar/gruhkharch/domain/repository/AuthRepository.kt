@@ -7,6 +7,8 @@ interface AuthRepository {
     val isSignedIn: Boolean
     val currentUserId: String?
     suspend fun signInWithGoogle(idToken: String): Result<User>
+    suspend fun signInAsGuest(name: String): Result<User>
+    suspend fun linkGoogle(idToken: String): Result<Unit>
     fun signOut()
     suspend fun deleteAccount(): Result<Unit>
 }

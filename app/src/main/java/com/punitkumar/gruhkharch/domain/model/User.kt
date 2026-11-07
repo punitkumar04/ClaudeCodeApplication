@@ -5,5 +5,6 @@ data class User(
     val name: String = "",
     val email: String = "",
     val photoUrl: String? = null,
-    val phoneNumber: String? = null
+    val phoneNumber: String? = null,
+    val isAnonymous: Boolean = false
 )
