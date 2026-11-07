@@ -18,19 +18,109 @@ import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.punitkumar.gruhkharch.R
 import com.punitkumar.gruhkharch.domain.model.DefaultStages
+import com.punitkumar.gruhkharch.domain.model.Member
+import com.punitkumar.gruhkharch.presentation.auth.GuestNameDialog
+import com.punitkumar.gruhkharch.presentation.auth.rememberGoogleSignInLauncher
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
     onSignOut: () -> Unit,
     onProjectDeleted: () -> Unit,
+    onAccountSwitched: () -> Unit,
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
     var showStageMenu by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
     var showDeleteAccountDialog by remember { mutableStateOf(false) }
+    var showGuestSignOutDialog by remember { mutableStateOf(false) }
+    var showAddMemberDialog by remember { mutableStateOf(false) }
+    var memberToRemove by remember { mutableStateOf<Member?>(null) }
     val snackbarHostState = remember { SnackbarHostState() }
+
+    val launchGoogleLink = rememberGoogleSignInLauncher(
+        onIdToken = viewModel::linkGoogle,
+        onError = viewModel::showMessage
+    )
+
+    if (showGuestSignOutDialog) {
+        AlertDialog(
+            onDismissRequest = { showGuestSignOutDialog = false },
+            icon = { Icon(Icons.Filled.Warning, contentDescription = stringResource(R.string.warning), tint = MaterialTheme.colorScheme.error) },
+            title = { Text(stringResource(R.string.guest_sign_out_title)) },
+            text = { Text(stringResource(R.string.guest_sign_out_message)) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showGuestSignOutDialog = false
+                        viewModel.signOut()
+                        onSignOut()
+                    },
+                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                ) { Text(stringResource(R.string.sign_out_anyway)) }
+            },
+            dismissButton = {
+                Row {
+                    TextButton(onClick = { showGuestSignOutDialog = false }) { Text(stringResource(R.string.cancel)) }
+                    TextButton(onClick = {
+                        showGuestSignOutDialog = false
+                        launchGoogleLink()
+                    }) { Text(stringResource(R.string.link_google)) }
+                }
+            }
+        )
+    }
+
+    if (state.linkConflictIdToken != null) {
+        AlertDialog(
+            onDismissRequest = { viewModel.dismissLinkConflict() },
+            icon = { Icon(Icons.Filled.Warning, contentDescription = stringResource(R.string.warning), tint = MaterialTheme.colorScheme.error) },
+            title = { Text(stringResource(R.string.google_account_in_use_title)) },
+            text = { Text(stringResource(R.string.google_account_in_use_message)) },
+            confirmButton = {
+                TextButton(onClick = { viewModel.switchToGoogleAccount(onAccountSwitched) }) {
+                    Text(stringResource(R.string.switch_account))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { viewModel.dismissLinkConflict() }) { Text(stringResource(R.string.cancel)) }
+            }
+        )
+    }
+
+    if (showAddMemberDialog) {
+        GuestNameDialog(
+            title = stringResource(R.string.add_member_by_name),
+            message = stringResource(R.string.add_member_by_name_message),
+            confirmLabel = stringResource(R.string.add),
+            onConfirm = { name ->
+                showAddMemberDialog = false
+                viewModel.addNameOnlyMember(name)
+            },
+            onDismiss = { showAddMemberDialog = false }
+        )
+    }
+
+    memberToRemove?.let { member ->
+        AlertDialog(
+            onDismissRequest = { memberToRemove = null },
+            title = { Text(stringResource(R.string.remove_member_title, member.name)) },
+            text = { Text(stringResource(R.string.remove_member_message)) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        memberToRemove = null
+                        viewModel.removeNameOnlyMember(member)
+                    },
+                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                ) { Text(stringResource(R.string.remove)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { memberToRemove = null }) { Text(stringResource(R.string.cancel)) }
+            }
+        )
+    }
 
     LaunchedEffect(state.message) {
         state.message?.let {
@@ -146,13 +236,49 @@ fun SettingsScreen(
                             }
                         }
 
+                        if (state.isGuest) {
+                            Card(
+                                colors = CardDefaults.cardColors(
+                                    containerColor = MaterialTheme.colorScheme.tertiaryContainer
+                                )
+                            ) {
+                                Column(
+                                    modifier = Modifier.padding(12.dp),
+                                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    Text(
+                                        text = stringResource(R.string.guest_account_title),
+                                        style = MaterialTheme.typography.titleSmall,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = MaterialTheme.colorScheme.onTertiaryContainer
+                                    )
+                                    Text(
+                                        text = stringResource(R.string.guest_account_message),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onTertiaryContainer
+                                    )
+                                    Button(
+                                        onClick = launchGoogleLink,
+                                        enabled = !state.isLoading,
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        Text(stringResource(R.string.link_google_account))
+                                    }
+                                }
+                            }
+                        }
+
                         HorizontalDivider()
 
                         // Sign Out
                         OutlinedButton(
                             onClick = {
-                                viewModel.signOut()
-                                onSignOut()
+                                if (state.isGuest) {
+                                    showGuestSignOutDialog = true
+                                } else {
+                                    viewModel.signOut()
+                                    onSignOut()
+                                }
                             },
                             modifier = Modifier.fillMaxWidth(),
                             colors = ButtonDefaults.outlinedButtonColors(
@@ -252,12 +378,32 @@ fun SettingsScreen(
 
             // Members
             item {
-                Text(
-                    text = stringResource(R.string.members_count_format, state.members.size),
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Medium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = stringResource(R.string.members_count_format, state.members.size),
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    if (state.isProjectOwner) {
+                        TextButton(onClick = { showAddMemberDialog = true }) {
+                            Icon(Icons.Filled.PersonAdd, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(stringResource(R.string.add_by_name))
+                        }
+                    }
+                }
+                if (state.isProjectOwner) {
+                    Text(
+                        text = stringResource(R.string.add_by_name_hint),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
             items(state.members) { member ->
                 Card(shape = RoundedCornerShape(12.dp)) {
@@ -280,10 +426,20 @@ fun SettingsScreen(
                                 fontWeight = FontWeight.Medium
                             )
                             Text(
-                                text = member.role.name.replace("_", " "),
+                                text = if (member.hasAccount) member.role.displayName
+                                else stringResource(R.string.member_no_app),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
+                        }
+                        if (state.isProjectOwner && !member.hasAccount) {
+                            IconButton(onClick = { memberToRemove = member }) {
+                                Icon(
+                                    Icons.Filled.PersonRemove,
+                                    contentDescription = stringResource(R.string.remove_member_title, member.name),
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
                         }
                     }
                 }

@@ -44,6 +44,20 @@ class AuthViewModel @Inject constructor(
         }
     }
 
+    fun continueAsGuest(name: String) {
+        viewModelScope.launch {
+            _authState.value = AuthState.Loading
+            authRepository.signInAsGuest(name)
+                .onSuccess {
+                    _isSignedIn.value = true
+                    _authState.value = AuthState.Success
+                }
+                .onFailure {
+                    _authState.value = AuthState.Error(it.message ?: "Sign in failed")
+                }
+        }
+    }
+
     fun createProject(name: String) {
         viewModelScope.launch {
             _authState.value = AuthState.Loading

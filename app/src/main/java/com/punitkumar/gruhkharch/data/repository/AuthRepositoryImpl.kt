@@ -31,6 +31,23 @@ class AuthRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun signInAsGuest(name: String): Result<User> {
+        return try {
+            Result.success(authSource.signInAsGuest(name))
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun linkGoogle(idToken: String): Result<Unit> {
+        return try {
+            authSource.linkGoogle(idToken)
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     override fun signOut() {
         authSource.signOut()
     }

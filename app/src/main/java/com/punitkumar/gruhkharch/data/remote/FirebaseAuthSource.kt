@@ -6,8 +6,11 @@ import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthRecentLoginRequiredException
+import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import com.google.firebase.auth.GoogleAuthProvider
+import com.google.firebase.auth.UserProfileChangeRequest
 import com.punitkumar.gruhkharch.R
+import com.punitkumar.gruhkharch.domain.model.GoogleAccountInUseException
 import com.punitkumar.gruhkharch.domain.model.User
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.tasks.await
@@ -26,9 +29,11 @@ class FirebaseAuthSource @Inject constructor(
             User(
                 id = it.uid,
                 name = it.displayName ?: "",
-                email = it.email ?: "",
+                // After a guest links Google, the email is only on the provider entry.
+                email = it.email ?: it.providerData.firstNotNullOfOrNull { p -> p.email } ?: "",
                 photoUrl = it.photoUrl?.toString(),
-                phoneNumber = it.phoneNumber
+                phoneNumber = it.phoneNumber,
+                isAnonymous = it.isAnonymous
             )
         }
 
@@ -46,6 +51,26 @@ class FirebaseAuthSource @Inject constructor(
             photoUrl = firebaseUser.photoUrl?.toString(),
             phoneNumber = firebaseUser.phoneNumber
         )
+    }
+
+    suspend fun signInAsGuest(name: String): User {
+        val firebaseUser = auth.signInAnonymously().await().user ?: throw Exception("Sign in failed")
+        val profile = UserProfileChangeRequest.Builder().setDisplayName(name).build()
+        firebaseUser.updateProfile(profile).await()
+        return currentUser ?: throw Exception("Sign in failed")
+    }
+
+    /**
+     * Upgrades the current guest to a Google account, keeping the same uid and therefore all data.
+     * Throws [GoogleAccountInUseException] if that Google account already has its own user.
+     */
+    suspend fun linkGoogle(idToken: String) {
+        val user = auth.currentUser ?: throw Exception("No user signed in")
+        try {
+            user.linkWithCredential(GoogleAuthProvider.getCredential(idToken, null)).await()
+        } catch (e: FirebaseAuthUserCollisionException) {
+            throw GoogleAccountInUseException(idToken)
+        }
     }
 
     suspend fun deleteAccount() {

@@ -1,28 +1,21 @@
 package com.punitkumar.gruhkharch.presentation.auth
 
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.*
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.google.android.gms.auth.api.signin.GoogleSignIn
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions
-import com.google.android.gms.auth.api.signin.GoogleSignInStatusCodes
-import com.google.android.gms.common.api.ApiException
-import com.google.android.gms.common.api.CommonStatusCodes
 import com.punitkumar.gruhkharch.R
+
+private const val MAX_NAME_LENGTH = 40
 
 @Composable
 fun AuthScreen(
@@ -30,38 +23,28 @@ fun AuthScreen(
     viewModel: AuthViewModel = hiltViewModel()
 ) {
     val authState by viewModel.authState.collectAsState()
-    val context = LocalContext.current
+    var showGuestDialog by remember { mutableStateOf(false) }
 
-    val launcher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.StartActivityForResult()
-    ) { result ->
-        // Configuration errors also come back as RESULT_CANCELED, so inspect any returned data.
-        // No data at all means the user simply backed out.
-        if (result.data == null) return@rememberLauncherForActivityResult
-        val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
-        try {
-            val idToken = task.getResult(ApiException::class.java)?.idToken
-            if (idToken != null) {
-                viewModel.signInWithGoogle(idToken)
-            } else {
-                viewModel.onSignInFailed(context.getString(R.string.sign_in_no_token))
-            }
-        } catch (e: ApiException) {
-            when (e.statusCode) {
-                GoogleSignInStatusCodes.SIGN_IN_CANCELLED -> Unit
-                CommonStatusCodes.DEVELOPER_ERROR ->
-                    viewModel.onSignInFailed(context.getString(R.string.sign_in_config_error))
-                else ->
-                    viewModel.onSignInFailed(context.getString(R.string.sign_in_failed_format, e.statusCode))
-            }
-        }
-    }
+    val launchGoogleSignIn = rememberGoogleSignInLauncher(
+        onIdToken = viewModel::signInWithGoogle,
+        onError = viewModel::onSignInFailed
+    )
 
     LaunchedEffect(authState) {
         if (authState is AuthState.Success) {
             viewModel.resetAuthState()
             onSignInSuccess()
         }
+    }
+
+    if (showGuestDialog) {
+        GuestNameDialog(
+            onConfirm = { name ->
+                showGuestDialog = false
+                viewModel.continueAsGuest(name)
+            },
+            onDismiss = { showGuestDialog = false }
+        )
     }
 
     Surface(
@@ -102,22 +85,17 @@ fun AuthScreen(
 
             Spacer(modifier = Modifier.height(48.dp))
 
+            val isLoading = authState is AuthState.Loading
+
             Button(
-                onClick = {
-                    val webClientId = context.getString(R.string.default_web_client_id)
-                    val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                        .requestIdToken(webClientId)
-                        .requestEmail()
-                        .build()
-                    val googleSignInClient = GoogleSignIn.getClient(context, gso)
-                    launcher.launch(googleSignInClient.signInIntent)
-                },
+                onClick = launchGoogleSignIn,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
+                enabled = !isLoading,
                 shape = MaterialTheme.shapes.medium
             ) {
-                if (authState is AuthState.Loading) {
+                if (isLoading) {
                     CircularProgressIndicator(
                         modifier = Modifier.size(24.dp),
                         color = MaterialTheme.colorScheme.onPrimary
@@ -130,12 +108,38 @@ fun AuthScreen(
                 }
             }
 
+            Spacer(modifier = Modifier.height(12.dp))
+
+            OutlinedButton(
+                onClick = { showGuestDialog = true },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                enabled = !isLoading,
+                shape = MaterialTheme.shapes.medium
+            ) {
+                Text(
+                    text = stringResource(R.string.continue_without_account),
+                    style = MaterialTheme.typography.titleMedium
+                )
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = stringResource(R.string.guest_hint),
+                style = MaterialTheme.typography.bodySmall,
+                textAlign = TextAlign.Center,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
             if (authState is AuthState.Error) {
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
                     text = (authState as AuthState.Error).message,
                     color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodyMedium
+                    style = MaterialTheme.typography.bodyMedium,
+                    textAlign = TextAlign.Center
                 )
             }
 
@@ -149,4 +153,42 @@ fun AuthScreen(
             )
         }
     }
+}
+
+/** Asks for a display name, used for "Paid by" and the member list. Also used for name-only members. */
+@Composable
+fun GuestNameDialog(
+    onConfirm: (String) -> Unit,
+    onDismiss: () -> Unit,
+    title: String = stringResource(R.string.whats_your_name),
+    message: String = stringResource(R.string.guest_name_message),
+    confirmLabel: String = stringResource(R.string.continue_label)
+) {
+    var name by remember { mutableStateOf("") }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        icon = { Icon(Icons.Filled.Person, contentDescription = null) },
+        title = { Text(title) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(message, style = MaterialTheme.typography.bodyMedium)
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it.take(MAX_NAME_LENGTH) },
+                    label = { Text(stringResource(R.string.name_label)) },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = { onConfirm(name.trim()) },
+                enabled = name.isNotBlank()
+            ) { Text(confirmLabel) }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) }
+        }
+    )
 }

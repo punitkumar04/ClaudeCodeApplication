@@ -12,6 +12,7 @@ import com.punitkumar.gruhkharch.util.toEntity
 import com.punitkumar.gruhkharch.util.toDomain
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -39,7 +40,7 @@ class ProjectRepositoryImpl @Inject constructor(
                 "budget" to 0.0,
                 "currency" to "INR",
                 "currentStage" to "Pre-Construction",
-                "members" to listOf(mapOf("userId" to userId, "name" to userName, "role" to "OWNER", "color" to member.color)),
+                "members" to listOf(memberToMap(member)),
                 "memberIds" to listOf(userId),
                 "stageBudgets" to emptyMap<String, Double>(),
                 "categoryBudgets" to emptyMap<String, Double>(),
@@ -76,7 +77,9 @@ class ProjectRepositoryImpl @Inject constructor(
 
             if (!alreadyMember) {
                 val colorIndex = existingMembers.size % Constants.MEMBER_COLORS.size
-                val newMemberMap = mapOf<String, Any?>("userId" to userId, "name" to userName, "role" to "FAMILY_MEMBER", "color" to Constants.MEMBER_COLORS[colorIndex])
+                val newMemberMap = memberToMap(
+                    Member(userId = userId, name = userName, color = Constants.MEMBER_COLORS[colorIndex])
+                )
                 firestoreProjectSource.addMemberAtomically(projectId, newMemberMap, userId)
             }
 
@@ -204,6 +207,48 @@ class ProjectRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun addNameOnlyMember(projectId: String, name: String): Result<Member> {
+        return try {
+            val project = projectDao.getProjectById(projectId)?.toDomain()
+                ?: return Result.failure(Exception("Project not found"))
+            val member = Member(
+                userId = "local_${UUID.randomUUID()}",
+                name = name,
+                color = Constants.MEMBER_COLORS[project.members.size % Constants.MEMBER_COLORS.size],
+                hasAccount = false
+            )
+            firestoreProjectSource.addNameOnlyMember(projectId, memberToMap(member))
+            projectDao.updateProject(project.copy(members = project.members + member).toEntity())
+            Result.success(member)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun removeNameOnlyMember(projectId: String, memberId: String): Result<Unit> {
+        return try {
+            val project = projectDao.getProjectById(projectId)?.toDomain()
+                ?: return Result.failure(Exception("Project not found"))
+            val member = project.members.find { it.userId == memberId }
+            if (member == null || member.hasAccount) {
+                return Result.failure(Exception("Only members without the app can be removed here"))
+            }
+            firestoreProjectSource.removeMemberAtomically(projectId, memberId)
+            projectDao.updateProject(project.copy(members = project.members - member).toEntity())
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    private fun memberToMap(member: Member): Map<String, Any?> = mapOf(
+        "userId" to member.userId,
+        "name" to member.name,
+        "role" to member.role.name,
+        "color" to member.color,
+        "hasAccount" to member.hasAccount
+    )
+
     private fun generateInviteCode(): String {
         val chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
         return (1..Constants.INVITE_CODE_LENGTH).map { chars.random() }.joinToString("")
@@ -216,8 +261,9 @@ class ProjectRepositoryImpl @Inject constructor(
         "budget" to project.budget,
         "currency" to project.currency,
         "currentStage" to project.currentStage,
-        "members" to project.members.map { mapOf("userId" to it.userId, "name" to it.name, "role" to it.role.name, "color" to it.color) },
-        "memberIds" to project.members.map { it.userId },
+        "members" to project.members.map { memberToMap(it) },
+        // memberIds drives security rules and queries, so it lists only people with an account.
+        "memberIds" to project.members.filter { it.hasAccount }.map { it.userId },
         "stageBudgets" to project.stageBudgets,
         "categoryBudgets" to project.categoryBudgets,
         "createdAt" to project.createdAt
@@ -230,7 +276,8 @@ class ProjectRepositoryImpl @Inject constructor(
                 userId = m["userId"] as? String ?: "",
                 name = m["name"] as? String ?: "",
                 role = try { MemberRole.valueOf(m["role"] as? String ?: "FAMILY_MEMBER") } catch (e: Exception) { MemberRole.FAMILY_MEMBER },
-                color = m["color"] as? String ?: Constants.MEMBER_COLORS.first()
+                color = m["color"] as? String ?: Constants.MEMBER_COLORS.first(),
+                hasAccount = m["hasAccount"] as? Boolean ?: true
             )
         }
         val stageBudgets = (map["stageBudgets"] as? Map<*, *>)

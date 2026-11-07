@@ -28,7 +28,8 @@ data class HomeState(
     val memberBreakdown: Map<String, Double> = emptyMap(),
     val isLoading: Boolean = true,
     val error: String? = null,
-    val hasProject: Boolean = true
+    val hasProject: Boolean = true,
+    val isGuest: Boolean = false
 )
 
 @HiltViewModel
@@ -55,7 +56,7 @@ class HomeViewModel @Inject constructor(
                 if (projectId == null) {
                     _state.value = HomeState(hasProject = false, isLoading = false)
                 } else {
-                    _state.value = HomeState()
+                    _state.value = HomeState(isGuest = authRepository.currentUser?.isAnonymous == true)
                     dashboardJob = launch { loadDashboard(projectId) }
                 }
             }
