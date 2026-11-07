@@ -1,5 +1,6 @@
 package com.punitkumar.gruhkharch.data.repository
 
+import com.punitkumar.gruhkharch.data.local.dao.ExpenseDao
 import com.punitkumar.gruhkharch.data.local.dao.ProjectDao
 import com.punitkumar.gruhkharch.data.remote.FirestoreProjectSource
 import com.punitkumar.gruhkharch.domain.model.Member
@@ -17,6 +18,7 @@ import javax.inject.Singleton
 @Singleton
 class ProjectRepositoryImpl @Inject constructor(
     private val projectDao: ProjectDao,
+    private val expenseDao: ExpenseDao,
     private val firestoreProjectSource: FirestoreProjectSource
 ) : ProjectRepository {
 
@@ -29,6 +31,7 @@ class ProjectRepositoryImpl @Inject constructor(
                 role = MemberRole.OWNER,
                 color = Constants.MEMBER_COLORS.first()
             )
+            val createdAt = System.currentTimeMillis()
             val projectData = mapOf(
                 "name" to name,
                 "createdBy" to userId,
@@ -40,7 +43,7 @@ class ProjectRepositoryImpl @Inject constructor(
                 "memberIds" to listOf(userId),
                 "stageBudgets" to emptyMap<String, Double>(),
                 "categoryBudgets" to emptyMap<String, Double>(),
-                "createdAt" to System.currentTimeMillis()
+                "createdAt" to createdAt
             )
 
             val projectId = firestoreProjectSource.createProject(projectData)
@@ -51,7 +54,7 @@ class ProjectRepositoryImpl @Inject constructor(
                 createdBy = userId,
                 inviteCode = inviteCode,
                 members = listOf(member),
-                createdAt = System.currentTimeMillis()
+                createdAt = createdAt
             )
 
             projectDao.insertProject(project.toEntity())
@@ -118,7 +121,10 @@ class ProjectRepositoryImpl @Inject constructor(
             projects.forEach { projectDao.insertProject(it.toEntity()) }
             projects
         } catch (e: Exception) {
-            projectDao.getAllProjectsSync().map { it.toDomain() }
+            // Offline: the local cache may also hold projects of a previous user on this device.
+            projectDao.getAllProjectsSync()
+                .map { it.toDomain() }
+                .filter { project -> project.members.any { it.userId == userId } }
         }
     }
 
@@ -190,6 +196,7 @@ class ProjectRepositoryImpl @Inject constructor(
     override suspend fun deleteProject(projectId: String): Result<Unit> {
         return try {
             firestoreProjectSource.deleteProject(projectId)
+            expenseDao.deleteAllExpensesForProject(projectId)
             projectDao.getProjectById(projectId)?.let { projectDao.deleteProject(it) }
             Result.success(Unit)
         } catch (e: Exception) {

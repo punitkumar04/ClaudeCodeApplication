@@ -78,8 +78,6 @@ class HomeViewModel @Inject constructor(
             )
         }
 
-        expenseRepository.pullRemoteExpenses(projectId)
-
         val now = System.currentTimeMillis()
         val monthStart = DateUtils.getStartOfMonth(now)
         val monthEnd = DateUtils.getEndOfMonth(now)
@@ -87,6 +85,9 @@ class HomeViewModel @Inject constructor(
         val lastMonthStart = DateUtils.getStartOfMonth(lastMonthEnd)
 
         coroutineScope {
+            // Local data shows immediately; the flows below update when the pull lands.
+            launch { expenseRepository.pullRemoteExpenses(projectId) }
+
             launch {
                 expenseRepository.getTotalSpent(project.id).collect { total ->
                     _state.update { it.copy(totalSpent = total) }

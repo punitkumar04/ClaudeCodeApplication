@@ -23,12 +23,13 @@ fun FilterSheet(
     onClear: () -> Unit,
     onDismiss: () -> Unit
 ) {
-    var selectedSortBy by remember { mutableStateOf(filter.sortBy) }
-    var selectedGroupBy by remember { mutableStateOf(filter.groupBy) }
-    var selectedCategories by remember { mutableStateOf(filter.categories.toSet()) }
-    var selectedStages by remember { mutableStateOf(filter.stages.toSet()) }
-    var selectedMembers by remember { mutableStateOf(filter.paidByUserIds.toSet()) }
-    var selectedPaymentModes by remember { mutableStateOf(filter.paymentModes.toSet()) }
+    // Keyed on filter so "Clear" resets the chips instead of re-applying the old selection.
+    var selectedSortBy by remember(filter) { mutableStateOf(filter.sortBy) }
+    var selectedGroupBy by remember(filter) { mutableStateOf(filter.groupBy) }
+    var selectedCategories by remember(filter) { mutableStateOf(filter.categories.toSet()) }
+    var selectedStages by remember(filter) { mutableStateOf(filter.stages.toSet()) }
+    var selectedMembers by remember(filter) { mutableStateOf(filter.paidByUserIds.toSet()) }
+    var selectedPaymentModes by remember(filter) { mutableStateOf(filter.paymentModes.toSet()) }
 
     Card(
         modifier = Modifier

@@ -61,8 +61,9 @@ class ProjectsListViewModel @Inject constructor(
                 )
             }
 
-            // Observe total spent for each project
+            // Totals come from the local DB, so fetch each project's expenses in the background.
             projects.forEach { project ->
+                launch { expenseRepository.pullRemoteExpenses(project.id) }
                 launch {
                     expenseRepository.getTotalSpent(project.id).collect { total ->
                         _state.update { state ->
@@ -80,9 +81,6 @@ class ProjectsListViewModel @Inject constructor(
 
     fun selectProject(projectId: String) {
         currentProjectHolder.setProject(projectId)
-        viewModelScope.launch {
-            expenseRepository.pullRemoteExpenses(projectId)
-        }
     }
 
     fun deleteProject(projectId: String) {

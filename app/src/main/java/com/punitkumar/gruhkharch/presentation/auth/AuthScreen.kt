@@ -1,6 +1,5 @@
 package com.punitkumar.gruhkharch.presentation.auth
 
-import android.app.Activity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.*
@@ -20,7 +19,9 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.auth.api.signin.GoogleSignInStatusCodes
 import com.google.android.gms.common.api.ApiException
+import com.google.android.gms.common.api.CommonStatusCodes
 import com.punitkumar.gruhkharch.R
 
 @Composable
@@ -34,13 +35,24 @@ fun AuthScreen(
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
     ) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
-            val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
-            try {
-                val account = task.getResult(ApiException::class.java)
-                account?.idToken?.let { viewModel.signInWithGoogle(it) }
-            } catch (e: ApiException) {
-                viewModel.onSignInFailed("Google Sign-In failed: ${e.statusCode}")
+        // Configuration errors also come back as RESULT_CANCELED, so inspect any returned data.
+        // No data at all means the user simply backed out.
+        if (result.data == null) return@rememberLauncherForActivityResult
+        val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+        try {
+            val idToken = task.getResult(ApiException::class.java)?.idToken
+            if (idToken != null) {
+                viewModel.signInWithGoogle(idToken)
+            } else {
+                viewModel.onSignInFailed(context.getString(R.string.sign_in_no_token))
+            }
+        } catch (e: ApiException) {
+            when (e.statusCode) {
+                GoogleSignInStatusCodes.SIGN_IN_CANCELLED -> Unit
+                CommonStatusCodes.DEVELOPER_ERROR ->
+                    viewModel.onSignInFailed(context.getString(R.string.sign_in_config_error))
+                else ->
+                    viewModel.onSignInFailed(context.getString(R.string.sign_in_failed_format, e.statusCode))
             }
         }
     }

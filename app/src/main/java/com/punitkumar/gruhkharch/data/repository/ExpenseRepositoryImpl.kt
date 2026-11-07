@@ -1,6 +1,5 @@
 package com.punitkumar.gruhkharch.data.repository
 
-import android.net.Uri
 import com.punitkumar.gruhkharch.data.local.dao.ExpenseDao
 import com.punitkumar.gruhkharch.data.remote.FirebaseStorageSource
 import com.punitkumar.gruhkharch.data.remote.FirestoreExpenseSource
@@ -10,8 +9,12 @@ import com.punitkumar.gruhkharch.domain.model.PaymentMode
 import com.punitkumar.gruhkharch.domain.repository.ExpenseRepository
 import com.punitkumar.gruhkharch.util.toEntity
 import com.punitkumar.gruhkharch.util.toDomain
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 import android.util.Log
 import java.util.UUID
 import javax.inject.Inject
@@ -25,6 +28,8 @@ class ExpenseRepositoryImpl @Inject constructor(
     private val firestoreExpenseSource: FirestoreExpenseSource,
     private val storageSource: FirebaseStorageSource
 ) : ExpenseRepository {
+
+    private val syncScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     override fun getExpenses(projectId: String): Flow<List<Expense>> {
         return expenseDao.getExpensesByProject(projectId).map { entities ->
@@ -65,20 +70,9 @@ class ExpenseRepositoryImpl @Inject constructor(
     override suspend fun addExpense(expense: Expense): Result<String> {
         return try {
             val id = if (expense.id.isBlank()) UUID.randomUUID().toString() else expense.id
-            val newExpense = expense.copy(id = id, updatedAt = System.currentTimeMillis())
-
-            // Save locally first
+            val newExpense = expense.copy(id = id, updatedAt = System.currentTimeMillis(), isSynced = false)
             expenseDao.insertExpense(newExpense.toEntity())
-
-            // Sync to Firestore
-            try {
-                val data = expenseToMap(newExpense)
-                firestoreExpenseSource.addExpense(newExpense.projectId, id, data)
-                expenseDao.markAsSynced(id)
-            } catch (e: Exception) {
-                Log.w(TAG, "Failed to sync new expense to Firestore, will retry later", e)
-            }
-
+            pushToRemote(newExpense)
             Result.success(id)
         } catch (e: Exception) {
             Result.failure(e)
@@ -87,18 +81,9 @@ class ExpenseRepositoryImpl @Inject constructor(
 
     override suspend fun updateExpense(expense: Expense): Result<Unit> {
         return try {
-            val updated = expense.copy(updatedAt = System.currentTimeMillis())
+            val updated = expense.copy(updatedAt = System.currentTimeMillis(), isSynced = false)
             expenseDao.updateExpense(updated.toEntity())
-
-            try {
-                firestoreExpenseSource.updateExpense(
-                    expense.projectId, expense.id, expenseToMap(updated)
-                )
-                expenseDao.markAsSynced(expense.id)
-            } catch (e: Exception) {
-                Log.w(TAG, "Failed to sync expense update to Firestore, will retry later", e)
-            }
-
+            pushToRemote(updated)
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
@@ -108,17 +93,31 @@ class ExpenseRepositoryImpl @Inject constructor(
     override suspend fun deleteExpense(expense: Expense): Result<Unit> {
         return try {
             expenseDao.deleteExpenseById(expense.id)
-
-            try {
-                firestoreExpenseSource.deleteExpense(expense.projectId, expense.id)
-                expense.receiptUrl?.let { storageSource.deleteReceipt(it) }
-            } catch (e: Exception) {
-                Log.w(TAG, "Failed to delete expense from Firestore", e)
+            syncScope.launch {
+                try {
+                    firestoreExpenseSource.deleteExpense(expense.projectId, expense.id)
+                    expense.receiptUrl?.let { storageSource.deleteReceipt(it) }
+                } catch (e: Exception) {
+                    Log.w(TAG, "Failed to delete expense from Firestore", e)
+                }
             }
-
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
+        }
+    }
+
+    // Runs outside the caller's scope so saving never waits on the network.
+    private fun pushToRemote(expense: Expense) {
+        syncScope.launch {
+            try {
+                val acknowledged = firestoreExpenseSource.setExpense(
+                    expense.projectId, expense.id, expenseToMap(expense)
+                )
+                if (acknowledged) expenseDao.markAsSynced(expense.id, expense.updatedAt)
+            } catch (e: Exception) {
+                Log.w(TAG, "Failed to sync expense ${expense.id}, will retry later", e)
+            }
         }
     }
 
@@ -130,16 +129,7 @@ class ExpenseRepositoryImpl @Inject constructor(
 
     override suspend fun syncExpenses(projectId: String) {
         try {
-            val unsynced = expenseDao.getUnsyncedExpenses(projectId)
-            unsynced.forEach { entity ->
-                try {
-                    val data = expenseToMap(entity.toDomain())
-                    firestoreExpenseSource.updateExpense(projectId, entity.id, data)
-                    expenseDao.markAsSynced(entity.id)
-                } catch (e: Exception) {
-                    Log.w(TAG, "Failed to sync expense ${entity.id}", e)
-                }
-            }
+            expenseDao.getUnsyncedExpenses(projectId).forEach { pushToRemote(it.toDomain()) }
         } catch (e: Exception) {
             Log.e(TAG, "Sync failed for project $projectId", e)
         }
@@ -147,10 +137,21 @@ class ExpenseRepositoryImpl @Inject constructor(
 
     override suspend fun pullRemoteExpenses(projectId: String) {
         try {
-            val remoteMaps = firestoreExpenseSource.getAllExpenses(projectId)
-            val remoteExpenses = remoteMaps.mapNotNull { mapToExpense(it, projectId) }
-            remoteExpenses.forEach { expense ->
-                expenseDao.insertExpense(expense.toEntity())
+            syncExpenses(projectId)
+            val remote = firestoreExpenseSource.getAllExpenses(projectId)
+
+            // Local edits not yet on the server win over the remote copy.
+            val unsyncedIds = expenseDao.getUnsyncedExpenses(projectId).map { it.id }.toSet()
+            val remoteExpenses = remote.expenses
+                .mapNotNull { mapToExpense(it, projectId) }
+                .filter { it.id !in unsyncedIds }
+            expenseDao.insertExpenses(remoteExpenses.map { it.toEntity() })
+
+            // Remove expenses other members deleted. A cache-only result may be incomplete, so skip then.
+            if (!remote.isFromCache) {
+                val remoteIds = remote.expenses.mapNotNull { it["id"] as? String }.toSet()
+                val deletedRemotely = expenseDao.getSyncedExpenseIds(projectId).filter { it !in remoteIds }
+                deletedRemotely.chunked(500).forEach { expenseDao.deleteExpensesByIds(it) }
             }
         } catch (e: Exception) {
             Log.w(TAG, "Failed to pull remote expenses for $projectId", e)

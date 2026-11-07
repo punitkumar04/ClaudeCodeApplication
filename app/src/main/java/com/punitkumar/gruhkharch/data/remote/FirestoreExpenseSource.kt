@@ -10,6 +10,11 @@ import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import javax.inject.Singleton
 
+data class RemoteExpenses(
+    val expenses: List<Map<String, Any?>>,
+    val isFromCache: Boolean
+)
+
 @Singleton
 class FirestoreExpenseSource @Inject constructor(
     private val firestore: FirebaseFirestore
@@ -19,18 +24,13 @@ class FirestoreExpenseSource @Inject constructor(
             .document(projectId)
             .collection(Constants.FIRESTORE_EXPENSES)
 
-    suspend fun addExpense(projectId: String, expenseId: String, expenseData: Map<String, Any?>): String {
-        expensesCollection(projectId).document(expenseId).set(expenseData).await()
-        return expenseId
+    /** Writes the full expense document, creating it if needed. Returns true once the server has it. */
+    suspend fun setExpense(projectId: String, expenseId: String, expenseData: Map<String, Any?>): Boolean {
+        return expensesCollection(projectId).document(expenseId).set(expenseData).awaitWrite()
     }
 
-    suspend fun updateExpense(projectId: String, expenseId: String, data: Map<String, Any?>) {
-        val filtered = data.filterValues { it != null }
-        expensesCollection(projectId).document(expenseId).update(filtered).await()
-    }
-
-    suspend fun deleteExpense(projectId: String, expenseId: String) {
-        expensesCollection(projectId).document(expenseId).delete().await()
+    suspend fun deleteExpense(projectId: String, expenseId: String): Boolean {
+        return expensesCollection(projectId).document(expenseId).delete().awaitWrite()
     }
 
     suspend fun getExpense(projectId: String, expenseId: String): Map<String, Any?>? {
@@ -38,14 +38,12 @@ class FirestoreExpenseSource @Inject constructor(
         return if (doc.exists()) doc.data?.plus("id" to doc.id) else null
     }
 
-    suspend fun getAllExpenses(projectId: String): List<Map<String, Any?>> {
-        val snapshot = expensesCollection(projectId)
-            .orderBy("date", Query.Direction.DESCENDING)
-            .get()
-            .await()
-        return snapshot.documents.map { doc ->
-            (doc.data ?: emptyMap()).plus("id" to doc.id)
-        }
+    suspend fun getAllExpenses(projectId: String): RemoteExpenses {
+        val snapshot = expensesCollection(projectId).get().await()
+        return RemoteExpenses(
+            expenses = snapshot.documents.map { doc -> (doc.data ?: emptyMap()).plus("id" to doc.id) },
+            isFromCache = snapshot.metadata.isFromCache
+        )
     }
 
     fun observeExpenses(projectId: String): Flow<List<Map<String, Any?>>> = callbackFlow {
