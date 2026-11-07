@@ -1,5 +1,7 @@
 package com.punitkumar.gruhkharch.data.repository
 
+import android.util.Log
+import com.google.firebase.firestore.FirebaseFirestoreException
 import com.punitkumar.gruhkharch.data.local.dao.ExpenseDao
 import com.punitkumar.gruhkharch.data.local.dao.ProjectDao
 import com.punitkumar.gruhkharch.data.remote.FirestoreProjectSource
@@ -10,11 +12,19 @@ import com.punitkumar.gruhkharch.domain.repository.ProjectRepository
 import com.punitkumar.gruhkharch.util.Constants
 import com.punitkumar.gruhkharch.util.toEntity
 import com.punitkumar.gruhkharch.util.toDomain
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
+import java.util.Collections
 import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
+
+private const val TAG = "ProjectRepository"
+private const val INVITE_CODE_ATTEMPTS = 3
 
 @Singleton
 class ProjectRepositoryImpl @Inject constructor(
@@ -23,9 +33,11 @@ class ProjectRepositoryImpl @Inject constructor(
     private val firestoreProjectSource: FirestoreProjectSource
 ) : ProjectRepository {
 
+    private val backgroundScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val inviteCodesChecked: MutableSet<String> = Collections.synchronizedSet(mutableSetOf())
+
     override suspend fun createProject(name: String, userId: String, userName: String): Result<Project> {
         return try {
-            val inviteCode = generateInviteCode()
             val member = Member(
                 userId = userId,
                 name = userName,
@@ -33,7 +45,7 @@ class ProjectRepositoryImpl @Inject constructor(
                 color = Constants.MEMBER_COLORS.first()
             )
             val createdAt = System.currentTimeMillis()
-            val projectData = mapOf(
+            fun projectData(inviteCode: String) = mapOf(
                 "name" to name,
                 "createdBy" to userId,
                 "inviteCode" to inviteCode,
@@ -47,7 +59,9 @@ class ProjectRepositoryImpl @Inject constructor(
                 "createdAt" to createdAt
             )
 
-            val projectId = firestoreProjectSource.createProject(projectData)
+            val (projectId, inviteCode) = withFreshInviteCode { code ->
+                firestoreProjectSource.createProject(projectData(code), code, userId) to code
+            }
 
             val project = Project(
                 id = projectId,
@@ -67,10 +81,12 @@ class ProjectRepositoryImpl @Inject constructor(
 
     override suspend fun joinProject(inviteCode: String, userId: String, userName: String): Result<Project> {
         return try {
-            val projectData = firestoreProjectSource.getProjectByInviteCode(inviteCode)
-                ?: return Result.failure(Exception("Invalid invite code"))
-
-            val projectId = projectData["id"] as? String ?: return Result.failure(Exception("Project not found"))
+            val projectId = firestoreProjectSource.getProjectIdForInviteCode(inviteCode)
+                ?: return Result.failure(
+                    Exception("Invite code not found. If it's correct, ask the project owner to open the app once, then try again.")
+                )
+            val projectData = firestoreProjectSource.getProject(projectId)
+                ?: return Result.failure(Exception("Project not found"))
 
             val existingMembers = (projectData["members"] as? List<*>)?.filterIsInstance<Map<*, *>>() ?: emptyList()
             val alreadyMember = existingMembers.any { (it["userId"] as? String) == userId }
@@ -122,6 +138,7 @@ class ProjectRepositoryImpl @Inject constructor(
         return try {
             val projects = firestoreProjectSource.getProjectsForUser(userId).map { mapToProject(it) }
             projects.forEach { projectDao.insertProject(it.toEntity()) }
+            projects.filter { it.createdBy == userId }.forEach { migrateInviteCode(it) }
             projects
         } catch (e: Exception) {
             // Offline: the local cache may also hold projects of a previous user on this device.
@@ -185,11 +202,12 @@ class ProjectRepositoryImpl @Inject constructor(
 
     override suspend fun regenerateInviteCode(projectId: String): Result<String> {
         return try {
-            val newCode = generateInviteCode()
             val project = projectDao.getProjectById(projectId)?.toDomain() ?: return Result.failure(Exception("Project not found"))
-            val updated = project.copy(inviteCode = newCode)
-            projectDao.updateProject(updated.toEntity())
-            firestoreProjectSource.updateProject(projectId, projectToMap(updated))
+            val newCode = withFreshInviteCode { code ->
+                firestoreProjectSource.regenerateInviteCode(projectId, project.inviteCode, code, project.createdBy)
+                code
+            }
+            projectDao.updateProject(project.copy(inviteCode = newCode).toEntity())
             Result.success(newCode)
         } catch (e: Exception) {
             Result.failure(e)
@@ -248,6 +266,32 @@ class ProjectRepositoryImpl @Inject constructor(
         "color" to member.color,
         "hasAccount" to member.hasAccount
     )
+
+    // Projects created before invite codes had their own collection need an entry so others can
+    // join. Checked once per app run, in the background so the project list isn't delayed.
+    private fun migrateInviteCode(project: Project) {
+        if (!inviteCodesChecked.add(project.id)) return
+        backgroundScope.launch {
+            try {
+                firestoreProjectSource.ensureInviteCode(project.id, project.inviteCode, project.createdBy)
+            } catch (e: Exception) {
+                inviteCodesChecked.remove(project.id)
+                Log.w(TAG, "Failed to migrate invite code for ${project.id}", e)
+            }
+        }
+    }
+
+    // A code already used by another project is rejected by the security rules; try a new one.
+    private suspend fun <T> withFreshInviteCode(block: suspend (String) -> T): T {
+        repeat(INVITE_CODE_ATTEMPTS - 1) {
+            try {
+                return block(generateInviteCode())
+            } catch (e: FirebaseFirestoreException) {
+                if (e.code != FirebaseFirestoreException.Code.PERMISSION_DENIED) throw e
+            }
+        }
+        return block(generateInviteCode())
+    }
 
     private fun generateInviteCode(): String {
         val chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"

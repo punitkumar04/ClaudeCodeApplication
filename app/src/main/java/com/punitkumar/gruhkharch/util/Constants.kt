@@ -4,6 +4,7 @@ object Constants {
     const val DB_NAME = "construction_khata_database"
     const val FIRESTORE_PROJECTS = "projects"
     const val FIRESTORE_EXPENSES = "expenses"
+    const val FIRESTORE_INVITE_CODES = "inviteCodes"
     const val FIRESTORE_USERS = "users"
     const val STORAGE_RECEIPTS = "receipts"
     const val PREFS_DATASTORE = "construction_khata_prefs"
