@@ -48,6 +48,12 @@ class ProjectsListViewModel @Inject constructor(
             _state.update { it.copy(currentUserId = userId, error = null) }
             val projects = projectRepository.getProjectsForUser(userId)
 
+            // The saved project may be one the user was removed from (or that was deleted).
+            val savedProjectId = currentProjectHolder.projectId.value
+            if (savedProjectId != null && projects.none { it.id == savedProjectId }) {
+                currentProjectHolder.clear()
+            }
+
             if (projects.isEmpty()) {
                 _state.update { it.copy(projects = emptyList(), isLoading = false) }
                 return@launch

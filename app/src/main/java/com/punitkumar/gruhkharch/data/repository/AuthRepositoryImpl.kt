@@ -69,7 +69,7 @@ class AuthRepositoryImpl @Inject constructor(
     // Deletes projects the user owns (with their expenses) and removes them from shared projects.
     // Reads from the server so an offline cache can't make us skip projects.
     private suspend fun deleteRemoteUserData(userId: String) {
-        firestoreProjectSource.getProjectsForUser(userId, Source.SERVER).forEach { project ->
+        firestoreProjectSource.getProjectsForUser(userId, Source.SERVER).projects.forEach { project ->
             val projectId = project["id"] as? String ?: return@forEach
             if (project["createdBy"] == userId) {
                 firestoreProjectSource.deleteProject(projectId)

@@ -103,15 +103,33 @@ fun SettingsScreen(
     }
 
     memberToRemove?.let { member ->
+        // People who use the app could rejoin with the current code, so offer a new one.
+        var regenerateCode by remember(member) { mutableStateOf(member.hasAccount) }
         AlertDialog(
             onDismissRequest = { memberToRemove = null },
             title = { Text(stringResource(R.string.remove_member_title, member.name)) },
-            text = { Text(stringResource(R.string.remove_member_message)) },
+            text = {
+                if (member.hasAccount) {
+                    Column {
+                        Text(stringResource(R.string.remove_app_member_message))
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Checkbox(checked = regenerateCode, onCheckedChange = { regenerateCode = it })
+                            Text(
+                                text = stringResource(R.string.remove_member_new_code),
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
+                    }
+                } else {
+                    Text(stringResource(R.string.remove_member_message))
+                }
+            },
             confirmButton = {
                 TextButton(
                     onClick = {
                         memberToRemove = null
-                        viewModel.removeNameOnlyMember(member)
+                        viewModel.removeMember(member, regenerateCode)
                     },
                     colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
                 ) { Text(stringResource(R.string.remove)) }
@@ -432,7 +450,7 @@ fun SettingsScreen(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
-                        if (state.isProjectOwner && !member.hasAccount) {
+                        if (state.isProjectOwner && member.userId != state.project?.createdBy) {
                             IconButton(onClick = { memberToRemove = member }) {
                                 Icon(
                                     Icons.Filled.PersonRemove,

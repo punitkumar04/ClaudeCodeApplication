@@ -226,5 +226,7 @@
     <string name="member_no_app">No app · added by owner</string>
     <string name="remove_member_title">Remove %1$s?</string>
     <string name="remove_member_message">Expenses already recorded for this person will keep their name.</string>
+    <string name="remove_app_member_message">They will lose access to this project. Expenses they already added will stay.</string>
+    <string name="remove_member_new_code">Also create a new invite code so they can\'t rejoin</string>
     <string name="remove">Remove</string>
 </resources>

@@ -136,8 +136,19 @@ class ProjectRepositoryImpl @Inject constructor(
 
     override suspend fun getProjectsForUser(userId: String): List<Project> {
         return try {
-            val projects = firestoreProjectSource.getProjectsForUser(userId).map { mapToProject(it) }
+            val remote = firestoreProjectSource.getProjectsForUser(userId)
+            val projects = remote.projects.map { mapToProject(it) }
             projects.forEach { projectDao.insertProject(it.toEntity()) }
+            // Drop local copies of projects the user was removed from (only trust a server answer).
+            if (!remote.isFromCache) {
+                val currentIds = projects.map { it.id }.toSet()
+                projectDao.getAllProjectsSync()
+                    .filter { it.id !in currentIds && it.toDomain().members.any { m -> m.userId == userId } }
+                    .forEach { stale ->
+                        expenseDao.deleteAllExpensesForProject(stale.id)
+                        projectDao.deleteProject(stale)
+                    }
+            }
             projects.filter { it.createdBy == userId }.forEach { migrateInviteCode(it) }
             projects
         } catch (e: Exception) {
@@ -190,10 +201,14 @@ class ProjectRepositoryImpl @Inject constructor(
 
     override suspend fun removeMember(projectId: String, userId: String): Result<Unit> {
         return try {
-            val project = projectDao.getProjectById(projectId)?.toDomain() ?: return Result.failure(Exception("Project not found"))
-            val updated = project.copy(members = project.members.filter { it.userId != userId })
-            projectDao.updateProject(updated.toEntity())
-            firestoreProjectSource.updateProject(projectId, projectToMap(updated))
+            val project = projectDao.getProjectById(projectId)?.toDomain()
+                ?: return Result.failure(Exception("Project not found"))
+            if (userId == project.createdBy) {
+                return Result.failure(Exception("The project owner can't be removed"))
+            }
+            // Transaction, so members who joined in the meantime aren't overwritten.
+            firestoreProjectSource.removeMemberAtomically(projectId, userId)
+            projectDao.updateProject(project.copy(members = project.members.filter { it.userId != userId }).toEntity())
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
@@ -238,22 +253,6 @@ class ProjectRepositoryImpl @Inject constructor(
             firestoreProjectSource.addNameOnlyMember(projectId, memberToMap(member))
             projectDao.updateProject(project.copy(members = project.members + member).toEntity())
             Result.success(member)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
-    override suspend fun removeNameOnlyMember(projectId: String, memberId: String): Result<Unit> {
-        return try {
-            val project = projectDao.getProjectById(projectId)?.toDomain()
-                ?: return Result.failure(Exception("Project not found"))
-            val member = project.members.find { it.userId == memberId }
-            if (member == null || member.hasAccount) {
-                return Result.failure(Exception("Only members without the app can be removed here"))
-            }
-            firestoreProjectSource.removeMemberAtomically(projectId, memberId)
-            projectDao.updateProject(project.copy(members = project.members - member).toEntity())
-            Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
         }
